@@ -1,0 +1,444 @@
+import { Check, X as XIcon } from 'lucide-react';
+import { Header } from '@/components/layout/Header';
+import { Footer } from '@/components/layout/Footer';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'List Your Food Van — Food Vans Near Me',
+  description:
+    'List your food truck, coffee cart or market stall on Food Vans Near Me. Reach thousands of hungry Australians looking for their next favourite food van.',
+};
+
+const FEATURES = [
+  { label: 'Live location pin', basic: true, pro: true, premium: true },
+  { label: 'Vendor profile + photos', basic: true, pro: true, premium: true },
+  { label: 'Menu listing', basic: true, pro: true, premium: true },
+  { label: 'Weekly schedule', basic: false, pro: true, premium: true },
+  { label: 'Vendor social posts', basic: false, pro: true, premium: true },
+  { label: 'Analytics dashboard', basic: false, pro: true, premium: true },
+  { label: 'Featured map pin', basic: false, pro: false, premium: true },
+  { label: 'Vendor of the Week eligibility', basic: false, pro: false, premium: true },
+  { label: 'Priority support', basic: false, pro: false, premium: true },
+];
+
+const FAQS = [
+  {
+    q: 'How do customers find me?',
+    a: 'When you mark yourself as "trading now" in the app, your van appears on the map for nearby customers searching in your area. Customers can also browse by cuisine type, dietary requirements and location.',
+  },
+  {
+    q: 'Can I update my location from my phone?',
+    a: 'Yes — our mobile-friendly dashboard lets you tap "I\'m Here!" to instantly update your location. The pin appears on the map within seconds, and customers nearby are notified.',
+  },
+  {
+    q: 'What payment methods do customers use?',
+    a: 'You can specify which payment methods you accept — EFTPOS, cash, Apple Pay and Google Pay. This is displayed on your profile so customers know what to bring.',
+  },
+  {
+    q: 'Do I need an ABN to sign up?',
+    a: 'You don\'t need an ABN to create a free trial account and explore the platform. However, you\'ll need a valid ABN once you upgrade to a paid plan, in accordance with Australian business requirements.',
+  },
+  {
+    q: 'Can I cancel anytime?',
+    a: 'Absolutely. There are no lock-in contracts. You can downgrade or cancel your subscription at any time through your account settings.',
+  },
+];
+
+function FeatureRow({ label, basic, pro, premium }: { label: string; basic: boolean; pro: boolean; premium: boolean }) {
+  return (
+    <tr className="border-b" style={{ borderColor: 'var(--border)' }}>
+      <td className="py-3 pr-4 text-[14px]" style={{ color: 'var(--text)' }}>{label}</td>
+      <td className="text-center py-3">
+        {basic ? (
+          <Check size={16} style={{ color: 'var(--success)', margin: 'auto' }} />
+        ) : (
+          <XIcon size={16} style={{ color: 'var(--muted)', margin: 'auto' }} />
+        )}
+      </td>
+      <td className="text-center py-3">
+        {pro ? (
+          <Check size={16} style={{ color: 'var(--success)', margin: 'auto' }} />
+        ) : (
+          <XIcon size={16} style={{ color: 'var(--muted)', margin: 'auto' }} />
+        )}
+      </td>
+      <td className="text-center py-3">
+        {premium ? (
+          <Check size={16} style={{ color: 'var(--success)', margin: 'auto' }} />
+        ) : (
+          <XIcon size={16} style={{ color: 'var(--muted)', margin: 'auto' }} />
+        )}
+      </td>
+    </tr>
+  );
+}
+
+export default function JoinPage() {
+  return (
+    <>
+      <Header showSearch={false} />
+
+      <main id="main-content">
+        {/* Hero */}
+        <div
+          className="py-16 px-4 text-center"
+          style={{
+            background: 'linear-gradient(160deg, color-mix(in srgb, var(--primary) 10%, var(--bg)) 0%, var(--bg) 60%)',
+          }}
+        >
+          <h1
+            className="text-3xl sm:text-4xl lg:text-5xl font-extrabold mb-4"
+            style={{ fontFamily: 'var(--font-display)', color: 'var(--text)' }}
+          >
+            List Your Food Van
+          </h1>
+          <p className="text-[17px] max-w-2xl mx-auto mb-2" style={{ color: 'var(--muted)' }}>
+            Reach thousands of hungry Australians looking for their next favourite food van
+          </p>
+        </div>
+
+        {/* Pricing cards */}
+        <section
+          id="pricing"
+          className="py-14 px-4"
+          aria-label="Pricing plans"
+          style={{ backgroundColor: 'var(--surface-off)' }}
+        >
+          <div className="max-w-5xl mx-auto">
+            {/* Desktop: feature table */}
+            <div className="hidden lg:block">
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr>
+                    <th className="text-left pb-6 pr-4" />
+                    {/* Basic */}
+                    <th className="pb-6 px-4">
+                      <div
+                        className="rounded-2xl border p-5"
+                        style={{
+                          backgroundColor: 'var(--surface)',
+                          borderColor: 'var(--border)',
+                        }}
+                      >
+                        <p className="font-bold text-[18px] mb-1" style={{ fontFamily: 'var(--font-display)', color: 'var(--text)' }}>Basic</p>
+                        <p className="text-[13px] mb-3" style={{ color: 'var(--muted)' }}>Free 30-day trial, then $19/mo</p>
+                        <a
+                          href="#"
+                          className="block text-center rounded-full py-2 text-[14px] font-semibold border"
+                          style={{ borderColor: 'var(--border)', color: 'var(--text)' }}
+                        >
+                          Start Free Trial
+                        </a>
+                      </div>
+                    </th>
+                    {/* Pro */}
+                    <th className="pb-6 px-4">
+                      <div
+                        className="rounded-2xl border-2 p-5"
+                        style={{
+                          backgroundColor: 'var(--surface)',
+                          borderColor: 'var(--primary)',
+                          boxShadow: '0 0 0 1px var(--primary)',
+                        }}
+                      >
+                        <div className="flex items-center gap-2 mb-1">
+                          <p className="font-bold text-[18px]" style={{ fontFamily: 'var(--font-display)', color: 'var(--text)' }}>Pro</p>
+                          <span
+                            className="text-[11px] font-bold px-2 py-0.5 rounded-full"
+                            style={{ backgroundColor: 'var(--primary)', color: 'white' }}
+                          >
+                            Most Popular
+                          </span>
+                        </div>
+                        <p className="text-[13px] mb-3" style={{ color: 'var(--muted)' }}>$39/mo</p>
+                        <a
+                          href="#"
+                          className="block text-center rounded-full py-2 text-[14px] font-semibold text-white"
+                          style={{ backgroundColor: 'var(--primary)' }}
+                        >
+                          Start Free Trial
+                        </a>
+                      </div>
+                    </th>
+                    {/* Premium */}
+                    <th className="pb-6 px-4">
+                      <div
+                        className="rounded-2xl border p-5"
+                        style={{
+                          backgroundColor: 'var(--surface)',
+                          borderColor: 'var(--border)',
+                        }}
+                      >
+                        <p className="font-bold text-[18px] mb-1" style={{ fontFamily: 'var(--font-display)', color: 'var(--text)' }}>Premium</p>
+                        <p className="text-[13px] mb-3" style={{ color: 'var(--muted)' }}>$69/mo</p>
+                        <a
+                          href="#"
+                          className="block text-center rounded-full py-2 text-[14px] font-semibold text-white"
+                          style={{ backgroundColor: 'var(--teal)' }}
+                        >
+                          Get Premium
+                        </a>
+                      </div>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {FEATURES.map((f) => (
+                    <FeatureRow key={f.label} {...f} />
+                  ))}
+                </tbody>
+              </table>
+              <p className="text-center text-[13px] mt-4" style={{ color: 'var(--muted)' }}>
+                All prices include GST
+              </p>
+            </div>
+
+            {/* Mobile: stacked cards */}
+            <div className="lg:hidden grid grid-cols-1 sm:grid-cols-3 gap-5">
+              {[
+                {
+                  name: 'Basic',
+                  price: 'Free trial, then $19/mo',
+                  highlight: false,
+                  cta: 'Start Free Trial',
+                  ctaStyle: { borderColor: 'var(--border)', color: 'var(--text)' } as React.CSSProperties,
+                  ctaClass: 'border',
+                },
+                {
+                  name: 'Pro',
+                  price: '$39/mo',
+                  highlight: true,
+                  cta: 'Start Free Trial',
+                  ctaStyle: { backgroundColor: 'var(--primary)', color: 'white' } as React.CSSProperties,
+                  ctaClass: '',
+                },
+                {
+                  name: 'Premium',
+                  price: '$69/mo',
+                  highlight: false,
+                  cta: 'Get Premium',
+                  ctaStyle: { backgroundColor: 'var(--teal)', color: 'white' } as React.CSSProperties,
+                  ctaClass: '',
+                },
+              ].map((plan) => (
+                <div
+                  key={plan.name}
+                  className="rounded-2xl border p-5"
+                  style={{
+                    backgroundColor: 'var(--surface)',
+                    borderColor: plan.highlight ? 'var(--primary)' : 'var(--border)',
+                    borderWidth: plan.highlight ? 2 : 1,
+                  }}
+                >
+                  {plan.highlight && (
+                    <span
+                      className="text-[11px] font-bold px-2 py-0.5 rounded-full mb-2 inline-block"
+                      style={{ backgroundColor: 'var(--primary)', color: 'white' }}
+                    >
+                      Most Popular
+                    </span>
+                  )}
+                  <h3
+                    className="text-[20px] font-bold mb-1"
+                    style={{ fontFamily: 'var(--font-display)', color: 'var(--text)' }}
+                  >
+                    {plan.name}
+                  </h3>
+                  <p className="text-[14px] mb-4" style={{ color: 'var(--muted)' }}>
+                    {plan.price}
+                  </p>
+                  <ul className="space-y-2 mb-5">
+                    {FEATURES.map((f) => {
+                      const included = plan.name === 'Basic' ? f.basic : plan.name === 'Pro' ? f.pro : f.premium;
+                      return (
+                        <li key={f.label} className="flex items-center gap-2 text-[13px]" style={{ color: included ? 'var(--text)' : 'var(--muted)', opacity: included ? 1 : 0.5 }}>
+                          {included ? <Check size={14} style={{ color: 'var(--success)' }} /> : <XIcon size={14} />}
+                          {f.label}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                  <a
+                    href="#"
+                    className={`block text-center rounded-full py-2.5 text-[14px] font-semibold ${plan.ctaClass}`}
+                    style={plan.ctaStyle}
+                  >
+                    {plan.cta}
+                  </a>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* How it works */}
+        <section id="how-it-works" className="py-14 px-4" aria-label="How it works">
+          <div className="max-w-4xl mx-auto">
+            <h2
+              className="text-[26px] font-bold text-center mb-10"
+              style={{ fontFamily: 'var(--font-display)', color: 'var(--text)' }}
+            >
+              How it works
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
+              {[
+                {
+                  icon: '📝',
+                  title: 'Create your profile',
+                  desc: 'Add photos, your menu, dietary info and social links. Takes less than 10 minutes.',
+                },
+                {
+                  icon: '📍',
+                  title: 'Update your location',
+                  desc: 'Tap "I\'m Here!" when you start trading. Your live pin appears on the map instantly.',
+                },
+                {
+                  icon: '🔍',
+                  title: 'Get discovered',
+                  desc: 'Hungry customers nearby find you on the map and come straight to your van.',
+                },
+              ].map(({ icon, title, desc }) => (
+                <div key={title} className="text-center">
+                  <div className="text-5xl mb-4" aria-hidden="true">
+                    {icon}
+                  </div>
+                  <h3
+                    className="text-[18px] font-bold mb-2"
+                    style={{ fontFamily: 'var(--font-display)', color: 'var(--text)' }}
+                  >
+                    {title}
+                  </h3>
+                  <p className="text-[15px] leading-relaxed" style={{ color: 'var(--muted)' }}>
+                    {desc}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Testimonials */}
+        <section
+          className="py-14 px-4"
+          style={{ backgroundColor: 'var(--surface-off)' }}
+          aria-label="Vendor testimonials"
+        >
+          <div className="max-w-4xl mx-auto">
+            <h2
+              className="text-[26px] font-bold text-center mb-10"
+              style={{ fontFamily: 'var(--font-display)', color: 'var(--text)' }}
+            >
+              What vendors say
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[
+                {
+                  quote:
+                    '"Since listing on Food Vans Near Me, our lunch takings have increased by 40%. Customers walk up and say they found us on the app!"',
+                  name: 'Mei L.',
+                  business: 'Dumpling Queen, Sydney',
+                },
+                {
+                  quote:
+                    '"The live location feature is a game-changer. I update it when I park and the customers just come. So simple and it actually works."',
+                  name: 'Brendan K.',
+                  business: 'Smoked & Stacked, Melbourne',
+                },
+                {
+                  quote:
+                    '"I was sceptical but after one weekend at the farmers market with the Pro listing, I\'d already made back the subscription cost ten times over."',
+                  name: 'Jasmine T.',
+                  business: 'Ceylon Bites, Brisbane',
+                },
+              ].map(({ quote, name, business }) => (
+                <blockquote
+                  key={name}
+                  className="rounded-2xl border p-5"
+                  style={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)' }}
+                >
+                  <p className="text-[14px] leading-relaxed mb-4 italic" style={{ color: 'var(--text)' }}>
+                    {quote}
+                  </p>
+                  <footer>
+                    <p className="font-semibold text-[14px]" style={{ color: 'var(--text)' }}>
+                      {name}
+                    </p>
+                    <p className="text-[12px]" style={{ color: 'var(--muted)' }}>
+                      {business}
+                    </p>
+                  </footer>
+                </blockquote>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* FAQ */}
+        <section className="py-14 px-4" aria-label="Frequently asked questions">
+          <div className="max-w-2xl mx-auto">
+            <h2
+              className="text-[26px] font-bold text-center mb-10"
+              style={{ fontFamily: 'var(--font-display)', color: 'var(--text)' }}
+            >
+              Frequently asked questions
+            </h2>
+            <div className="space-y-4">
+              {FAQS.map(({ q, a }) => (
+                <details
+                  key={q}
+                  className="rounded-xl border overflow-hidden"
+                  style={{ borderColor: 'var(--border)' }}
+                >
+                  <summary
+                    className="px-5 py-4 text-[15px] font-semibold cursor-pointer select-none list-none flex items-center justify-between"
+                    style={{ backgroundColor: 'var(--surface)', color: 'var(--text)' }}
+                  >
+                    {q}
+                    <span className="ml-3 flex-shrink-0 text-[20px]" style={{ color: 'var(--primary)' }} aria-hidden="true">+</span>
+                  </summary>
+                  <div
+                    className="px-5 py-4 text-[14px] leading-relaxed"
+                    style={{ backgroundColor: 'var(--surface-2)', color: 'var(--muted)' }}
+                  >
+                    {a}
+                  </div>
+                </details>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Final CTA */}
+        <section
+          className="py-16 px-4 text-center"
+          style={{
+            background: 'linear-gradient(135deg, color-mix(in srgb, var(--primary) 12%, var(--bg)) 0%, var(--bg) 70%)',
+          }}
+          aria-label="Sign up call to action"
+        >
+          <h2
+            className="text-[28px] sm:text-[32px] font-extrabold mb-3"
+            style={{ fontFamily: 'var(--font-display)', color: 'var(--text)' }}
+          >
+            Ready to get started?
+          </h2>
+          <p className="text-[16px] mb-8" style={{ color: 'var(--muted)' }}>
+            No credit card required for your 30-day trial.
+          </p>
+          <a
+            href="#"
+            className="inline-flex items-center gap-2 rounded-full px-8 py-4 text-[16px] font-bold text-white"
+            style={{ backgroundColor: 'var(--primary)' }}
+          >
+            Create Free Account
+          </a>
+          <p className="mt-3 text-[13px]" style={{ color: 'var(--muted)' }}>
+            No credit card required for your 30-day trial
+          </p>
+        </section>
+      </main>
+
+      <Footer />
+    </>
+  );
+}

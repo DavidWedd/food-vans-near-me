@@ -1,0 +1,214 @@
+@import "tailwindcss";
+
+/* ── Font registration ─────────────────────────────── */
+@theme {
+  --font-display: "Cabinet Grotesk", ui-sans-serif, sans-serif;
+  --font-sans: "Satoshi", ui-sans-serif, sans-serif;
+}
+
+/* ── Colour tokens (light mode) ────────────────────── */
+:root {
+  --bg: #F8F6F1;
+  --surface: #F9F7F2;
+  --surface-2: #FBF9F6;
+  --surface-off: #F2EFE8;
+  --border: #D5D0C6;
+  --text: #2A2520;
+  --muted: #7A776F;
+  --primary: #E07B00;
+  --primary-h: #C56A00;
+  --teal: #01696F;
+  --red: #C4392B;
+  --success: #437A22;
+}
+
+/* ── Dark mode – system preference ─────────────────── */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #171412;
+    --surface: #1C1A17;
+    --surface-2: #201E1B;
+    --surface-off: #252220;
+    --border: #3A3530;
+    --text: #CDCBC6;
+    --muted: #8A8680;
+    --primary: #F59A2E;
+    --primary-h: #E07B00;
+    --teal: #4FA8AD;
+    --red: #E05045;
+    --success: #5A9E30;
+  }
+}
+
+/* ── Dark mode – manual override ───────────────────── */
+[data-theme="dark"] {
+  --bg: #171412;
+  --surface: #1C1A17;
+  --surface-2: #201E1B;
+  --surface-off: #252220;
+  --border: #3A3530;
+  --text: #CDCBC6;
+  --muted: #8A8680;
+  --primary: #F59A2E;
+  --primary-h: #E07B00;
+  --teal: #4FA8AD;
+  --red: #E05045;
+  --success: #5A9E30;
+}
+
+/* ── Base styles ────────────────────────────────────── */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans, ui-sans-serif, sans-serif);
+  line-height: 1.6;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Typography ─────────────────────────────────────── */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display, ui-sans-serif, sans-serif);
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--text);
+}
+
+/* ── Focus styles ───────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* ── Skip to content ────────────────────────────────── */
+.skip-link {
+  position: absolute;
+  top: -999px;
+  left: 0;
+  padding: 8px 16px;
+  background: var(--primary);
+  color: white;
+  font-weight: 700;
+  z-index: 9999;
+  border-radius: 0 0 4px 0;
+}
+.skip-link:focus {
+  top: 0;
+}
+
+/* ── Leaflet overrides ──────────────────────────────── */
+.leaflet-container {
+  font-family: var(--font-sans, ui-sans-serif, sans-serif) !important;
+}
+
+.leaflet-popup-content-wrapper {
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.15) !important;
+  padding: 0 !important;
+  border: 1px solid var(--border) !important;
+}
+
+.leaflet-popup-content {
+  margin: 0 !important;
+}
+
+.leaflet-popup-tip {
+  background: var(--surface) !important;
+}
+
+.leaflet-popup-close-button {
+  color: var(--muted) !important;
+  font-size: 18px !important;
+  padding: 8px !important;
+}
+
+/* Marker cluster styles */
+.marker-cluster-small,
+.marker-cluster-medium,
+.marker-cluster-large {
+  background-color: rgba(224, 123, 0, 0.15) !important;
+}
+.marker-cluster-small div,
+.marker-cluster-medium div,
+.marker-cluster-large div {
+  background-color: var(--primary) !important;
+  color: white !important;
+  font-family: var(--font-sans, sans-serif) !important;
+  font-weight: 700 !important;
+}
+
+/* ── Transitions ────────────────────────────────────── */
+@media (prefers-reduced-motion: no-preference) {
+  .transition-theme {
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  }
+}
+
+/* ── Scrollbar ──────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--surface);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+/* ── Utility classes using CSS variables ────────────── */
+.bg-page       { background-color: var(--bg); }
+.bg-surface    { background-color: var(--surface); }
+.bg-surface-2  { background-color: var(--surface-2); }
+.bg-surface-off{ background-color: var(--surface-off); }
+.bg-primary    { background-color: var(--primary); }
+.bg-teal       { background-color: var(--teal); }
+.bg-success    { background-color: var(--success); }
+
+.text-default  { color: var(--text); }
+.text-muted    { color: var(--muted); }
+.text-primary  { color: var(--primary); }
+.text-teal     { color: var(--teal); }
+.text-red      { color: var(--red); }
+.text-success  { color: var(--success); }
+
+.border-default { border-color: var(--border); }
+
+.hover\:bg-primary-h:hover { background-color: var(--primary-h); }
+.hover\:text-primary:hover  { color: var(--primary); }
+
+/* ── Animations ─────────────────────────────────────── */
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.6; transform: scale(1.4); }
+}
+.animate-pulse-dot {
+  animation: pulse-dot 1.5s ease-in-out infinite;
+}
+
+@keyframes skeleton-shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--surface-off) 25%,
+    var(--surface-2) 50%,
+    var(--surface-off) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s infinite;
+}

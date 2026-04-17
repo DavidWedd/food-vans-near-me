@@ -1,0 +1,268 @@
+'use client';
+
+import dynamic from 'next/dynamic';
+import Image from 'next/image';
+import Link from 'next/link';
+import { useState, useMemo } from 'react';
+import { Header } from '@/components/layout/Header';
+import { Footer } from '@/components/layout/Footer';
+import { FilterBar } from '@/components/vendor/FilterBar';
+import { VendorGrid } from '@/components/vendor/VendorGrid';
+import { SEED_VENDORS, SEED_MARKETS } from '@/lib/seed-data';
+import { filterVendors } from '@/lib/utils';
+import type { FilterState, Vendor } from '@/types';
+import { StarRating } from '@/components/vendor/StarRating';
+import { Badge } from '@/components/ui/Badge';
+import { ArrowRight } from 'lucide-react';
+
+const VendorMap = dynamic(() => import('@/components/map/VendorMap'), {
+  ssr: false,
+  loading: () => (
+    <div
+      className="w-full animate-pulse"
+      style={{ height: '55vh', minHeight: '320px', backgroundColor: 'var(--surface-off)' }}
+    >
+      <div className="flex items-center justify-center h-full">
+        <p className="text-[14px]" style={{ color: 'var(--muted)' }}>
+          Loading map…
+        </p>
+      </div>
+    </div>
+  ),
+});
+
+const DEFAULT_FILTERS: FilterState = {
+  openNow: false,
+  cuisineTypes: [],
+  dietaryTags: [],
+  state: 'ALL',
+  searchQuery: '',
+  radius: 5,
+};
+
+const VENDOR_OF_WEEK = SEED_VENDORS.find((v) => v.slug === 'smoky-bros-bbq')!;
+
+export default function HomePage() {
+  const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS);
+  const [selectedVendorId, setSelectedVendorId] = useState<string | null>(null);
+  const [isFiltering, setIsFiltering] = useState(false);
+
+  const handleFiltersChange = (next: FilterState) => {
+    setIsFiltering(true);
+    setFilters(next);
+    setTimeout(() => setIsFiltering(false), 300);
+  };
+
+  const handleLocateMe = () => {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition((pos) => {
+      setFilters((f) => ({
+        ...f,
+        searchQuery: `${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`,
+      }));
+    });
+  };
+
+  const filtered = useMemo(() => filterVendors(SEED_VENDORS, filters), [filters]);
+
+  const handleVendorSelect = (vendor: Vendor) => {
+    setSelectedVendorId(vendor.id);
+    const el = document.getElementById(`vendor-card-${vendor.id}`);
+    el?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  };
+
+  return (
+    <>
+      <Header
+        searchQuery={filters.searchQuery}
+        radius={filters.radius}
+        onSearchChange={(q) => handleFiltersChange({ ...filters, searchQuery: q })}
+        onRadiusChange={(r) => handleFiltersChange({ ...filters, radius: r })}
+        onLocateMe={handleLocateMe}
+        showSearch
+      />
+
+      <main id="main-content">
+        {/* Hero Map */}
+        <section aria-label="Food van locations map">
+          <VendorMap
+            vendors={filtered}
+            onVendorSelect={handleVendorSelect}
+            className="w-full"
+          />
+          {/* Hidden screen-reader vendor list */}
+          <ul className="sr-only" aria-label="List of food vans">
+            {filtered.map((v) => (
+              <li key={v.id}>
+                <Link href={`/van/${v.slug}`}>
+                  {v.business_name} — {v.suburb}, {v.state}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        {/* Filter bar */}
+        <FilterBar filters={filters} onChange={handleFiltersChange} />
+
+        {/* Vendor grid section */}
+        <section
+          className="max-w-7xl mx-auto px-4 py-8"
+          aria-label="Food van listings"
+        >
+          <h2
+            className="text-[22px] font-bold mb-6"
+            style={{ fontFamily: 'var(--font-display)', color: 'var(--text)' }}
+          >
+            {filtered.length} food van{filtered.length !== 1 ? 's' : ''} found near you
+          </h2>
+          <VendorGrid
+            vendors={filtered}
+            loading={isFiltering}
+            selectedVendorId={selectedVendorId}
+          />
+        </section>
+
+        {/* Vendor of the Week */}
+        {VENDOR_OF_WEEK && (
+          <section
+            className="py-12 px-4"
+            style={{ backgroundColor: 'var(--surface-off)' }}
+            aria-label="Vendor of the week"
+          >
+            <div className="max-w-5xl mx-auto">
+              <div
+                className="rounded-2xl overflow-hidden border"
+                style={{
+                  borderColor: 'var(--primary)',
+                  background: 'linear-gradient(135deg, color-mix(in srgb, var(--primary) 8%, var(--surface)) 0%, var(--surface) 100%)',
+                }}
+              >
+                <div className="flex flex-col md:flex-row">
+                  {/* Image */}
+                  <div className="relative md:w-1/2 h-56 md:h-auto min-h-[220px] flex-shrink-0">
+                    <Image
+                      src={VENDOR_OF_WEEK.cover_photo_url || ''}
+                      alt={`${VENDOR_OF_WEEK.business_name} — Vendor of the Week`}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 100vw, 50vw"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent to-black/10" />
+                  </div>
+
+                  {/* Content */}
+                  <div className="p-6 md:p-8 flex flex-col justify-center">
+                    <p
+                      className="text-[12px] font-bold uppercase tracking-widest mb-2"
+                      style={{ color: 'var(--primary)' }}
+                    >
+                      ⭐ Vendor of the Week
+                    </p>
+                    <h2
+                      className="text-[28px] font-extrabold leading-tight mb-2"
+                      style={{ fontFamily: 'var(--font-display)', color: 'var(--text)' }}
+                    >
+                      {VENDOR_OF_WEEK.business_name}
+                    </h2>
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {VENDOR_OF_WEEK.cuisine_type.map((c) => (
+                        <Badge key={c} variant="cuisine">
+                          {c === 'bbq' ? '🔥 BBQ' : c}
+                        </Badge>
+                      ))}
+                    </div>
+                    {VENDOR_OF_WEEK.avg_rating !== undefined && (
+                      <div className="mb-3">
+                        <StarRating
+                          rating={VENDOR_OF_WEEK.avg_rating}
+                          reviewCount={VENDOR_OF_WEEK.review_count}
+                          size={16}
+                        />
+                      </div>
+                    )}
+                    <p
+                      className="text-[15px] leading-relaxed mb-5 line-clamp-3"
+                      style={{ color: 'var(--muted)' }}
+                    >
+                      {VENDOR_OF_WEEK.description}
+                    </p>
+                    <Link
+                      href={`/van/${VENDOR_OF_WEEK.slug}`}
+                      className="inline-flex items-center gap-2 self-start rounded-full px-5 py-2.5 text-[14px] font-semibold text-white"
+                      style={{ backgroundColor: 'var(--primary)' }}
+                    >
+                      View Profile
+                      <ArrowRight size={16} />
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Markets strip */}
+        <section className="py-12 px-4" aria-label="Markets and events">
+          <div className="max-w-7xl mx-auto">
+            <h2
+              className="text-[22px] font-bold mb-6"
+              style={{ fontFamily: 'var(--font-display)', color: 'var(--text)' }}
+            >
+              Markets &amp; Events Near You
+            </h2>
+            <div className="flex gap-5 overflow-x-auto pb-4 -mx-4 px-4">
+              {SEED_MARKETS.map((market) => (
+                <Link
+                  key={market.id}
+                  href={`/markets#${market.slug}`}
+                  className="flex-shrink-0 w-[300px] rounded-2xl border overflow-hidden group transition-all duration-200"
+                  style={{
+                    backgroundColor: 'var(--surface)',
+                    borderColor: 'var(--border)',
+                  }}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 24px rgba(0,0,0,0.1)';
+                    (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)';
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLElement).style.boxShadow = '';
+                    (e.currentTarget as HTMLElement).style.transform = '';
+                  }}
+                >
+                  <div className="relative h-40 overflow-hidden">
+                    <Image
+                      src={market.cover_photo_url || ''}
+                      alt={market.name}
+                      fill
+                      className="object-cover transition-transform duration-300 group-hover:scale-105"
+                      sizes="300px"
+                      loading="lazy"
+                    />
+                  </div>
+                  <div className="p-4">
+                    <h3
+                      className="font-bold text-[16px] mb-1 leading-snug"
+                      style={{ fontFamily: 'var(--font-display)', color: 'var(--text)' }}
+                    >
+                      {market.name}
+                    </h3>
+                    <p className="text-[13px] mb-2" style={{ color: 'var(--muted)' }}>
+                      {market.suburb}, {market.state}
+                    </p>
+                    <Badge variant="frequency">{market.frequency}</Badge>
+                    <p className="text-[12px] mt-2" style={{ color: 'var(--muted)' }}>
+                      {market.day_of_week}
+                    </p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <Footer />
+    </>
+  );
+}
