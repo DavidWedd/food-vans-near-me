@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { BUSINESS, BUSINESS_LINE } from '@/lib/business';
 
 function FoodVanLogo({ size = 24 }: { size?: number }) {
   return (
@@ -81,7 +82,8 @@ export function Footer() {
                 { label: 'Find Vans', href: '/' },
                 { label: 'Markets & Events', href: '/markets' },
                 { label: 'List Your Van', href: '/join' },
-                { label: 'About', href: '#' },
+                { label: 'About', href: '/about' },
+                { label: 'Contact', href: '/contact' },
               ].map(({ label, href }) => (
                 <li key={label}>
                   <Link
@@ -115,6 +117,8 @@ export function Footer() {
                 { label: 'How it works', href: '/join#how-it-works' },
                 { label: 'Pricing', href: '/join#pricing' },
                 { label: 'Sign up', href: '/join' },
+                { label: 'Terms of Use', href: '/terms' },
+                { label: 'Privacy Policy', href: '/privacy' },
               ].map(({ label, href }) => (
                 <li key={label}>
                   <Link
@@ -172,7 +176,12 @@ export function Footer() {
           className="border-t pt-6 flex flex-col sm:flex-row items-center justify-between gap-2 text-[13px]"
           style={{ borderColor: 'var(--border)', color: 'var(--muted)' }}
         >
-          <p>© 2026 Food Vans Near Me · Australian English · ABN XXXXXXXXX</p>
+          <p>
+            © {new Date().getFullYear()} {BUSINESS_LINE} ·{' '}
+            <Link href="/terms" className="underline">Terms</Link> ·{' '}
+            <Link href="/privacy" className="underline">Privacy</Link> ·{' '}
+            <a href={`mailto:${BUSINESS.email}`} className="underline">{BUSINESS.email}</a>
+          </p>
           <p>
             Made in Hobart for hungry Tasmanians
           </p>

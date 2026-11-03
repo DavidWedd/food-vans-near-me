@@ -2,6 +2,7 @@ import { Check, X as XIcon } from 'lucide-react';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import type { Metadata } from 'next';
+import { FOUNDING_SPOT_MAILTO } from '@/lib/business';
 
 export const metadata: Metadata = {
   title: 'List Your Food Van - Food Vans Near Me',
@@ -24,11 +25,11 @@ const FEATURES = [
 const FAQS = [
   {
     q: 'How do customers find me?',
-    a: 'When you mark yourself as "trading now" in the app, your van appears on the map for nearby customers searching in your area. Customers can also browse by cuisine type, dietary requirements and location.',
+    a: 'When you mark yourself as trading, your van appears on the map for people searching nearby. Customers can also browse by cuisine, dietary needs, payment method and suburb, and see which markets you trade at.',
   },
   {
     q: 'Can I update my location from my phone?',
-    a: 'Yes — our mobile-friendly dashboard lets you tap "I\'m Here!" to instantly update your location. The pin appears on the map within seconds, and customers nearby are notified.',
+    a: 'Yes. Your vendor dashboard works on your phone: tap "I\'m here" and your pin appears on the map straight away. Vendor dashboards are opening to our founding vendors first.',
   },
   {
     q: 'What payment methods do customers use?',
@@ -39,8 +40,12 @@ const FAQS = [
     a: 'You don\'t need an ABN to create a free trial account and explore the platform. However, you\'ll need a valid ABN once you upgrade to a paid plan, in accordance with Australian business requirements.',
   },
   {
+    q: 'What is the founding vendor offer?',
+    a: 'The first 15 Tasmanian food vans, coffee carts and mobile food businesses to join get the Basic plan free for 12 months. No credit card needed. We\'ll remind you well before the free year ends, and you only pay if you choose to continue.',
+  },
+  {
     q: 'Can I cancel anytime?',
-    a: 'Absolutely. There are no lock-in contracts. You can downgrade or cancel your subscription at any time through your account settings.',
+    a: 'Yes. There are no lock-in contracts. Cancel any time and your plan stays active until the end of the period you\'ve paid for.',
   },
 ];
 
@@ -104,6 +109,27 @@ export default function JoinPage() {
           aria-label="Pricing plans"
           style={{ backgroundColor: 'var(--surface-off)' }}
         >
+          <div
+            className="max-w-3xl mx-auto mb-10 rounded-2xl border-2 p-6 text-center"
+            style={{ borderColor: 'var(--primary)', backgroundColor: 'color-mix(in srgb, var(--primary) 7%, var(--surface))' }}
+          >
+            <p className="text-[12px] font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--primary)' }}>
+              Founding vendor offer
+            </p>
+            <p className="text-[20px] font-extrabold mb-2" style={{ fontFamily: 'var(--font-display)', color: 'var(--text)' }}>
+              The first 15 Tasmanian vendors get Basic free for 12 months
+            </p>
+            <p className="text-[15px] mb-4" style={{ color: 'var(--muted)' }}>
+              No card, no catch. Everyone after that gets a free 30-day trial.
+            </p>
+            <a
+              href={FOUNDING_SPOT_MAILTO}
+              className="inline-flex items-center rounded-full px-6 py-3 text-[15px] font-semibold text-white"
+              style={{ backgroundColor: 'var(--primary)' }}
+            >
+              Claim a founding spot
+            </a>
+          </div>
           <div className="max-w-5xl mx-auto">
             {/* Desktop: feature table */}
             <div className="hidden lg:block">
@@ -123,7 +149,7 @@ export default function JoinPage() {
                         <p className="font-bold text-[18px] mb-1" style={{ fontFamily: 'var(--font-display)', color: 'var(--text)' }}>Basic</p>
                         <p className="text-[13px] mb-3" style={{ color: 'var(--muted)' }}>Free 30-day trial, then $19/mo</p>
                         <a
-                          href="#"
+                          href={FOUNDING_SPOT_MAILTO}
                           className="block text-center rounded-full py-2 text-[14px] font-semibold border"
                           style={{ borderColor: 'var(--border)', color: 'var(--text)' }}
                         >
@@ -152,7 +178,7 @@ export default function JoinPage() {
                         </div>
                         <p className="text-[13px] mb-3" style={{ color: 'var(--muted)' }}>$39/mo</p>
                         <a
-                          href="#"
+                          href={FOUNDING_SPOT_MAILTO}
                           className="block text-center rounded-full py-2 text-[14px] font-semibold text-white"
                           style={{ backgroundColor: 'var(--primary)' }}
                         >
@@ -172,7 +198,7 @@ export default function JoinPage() {
                         <p className="font-bold text-[18px] mb-1" style={{ fontFamily: 'var(--font-display)', color: 'var(--text)' }}>Premium</p>
                         <p className="text-[13px] mb-3" style={{ color: 'var(--muted)' }}>$69/mo</p>
                         <a
-                          href="#"
+                          href={FOUNDING_SPOT_MAILTO}
                           className="block text-center rounded-full py-2 text-[14px] font-semibold text-white"
                           style={{ backgroundColor: 'var(--teal)' }}
                         >
@@ -259,7 +285,7 @@ export default function JoinPage() {
                     })}
                   </ul>
                   <a
-                    href="#"
+                    href={FOUNDING_SPOT_MAILTO}
                     className={`block text-center rounded-full py-2.5 text-[14px] font-semibold ${plan.ctaClass}`}
                     style={plan.ctaStyle}
                   >
@@ -368,17 +394,18 @@ export default function JoinPage() {
             Ready to get started?
           </h2>
           <p className="text-[16px] mb-8" style={{ color: 'var(--muted)' }}>
-            No credit card required for your 30-day trial.
+            The first 15 Tasmanian vendors get the Basic plan free for 12 months. Email us to claim
+            your spot and we&apos;ll set you up personally.
           </p>
           <a
-            href="#"
+            href={FOUNDING_SPOT_MAILTO}
             className="inline-flex items-center gap-2 rounded-full px-8 py-4 text-[16px] font-bold text-white"
             style={{ backgroundColor: 'var(--primary)' }}
           >
-            Create Free Account
+            Claim a founding spot
           </a>
           <p className="mt-3 text-[13px]" style={{ color: 'var(--muted)' }}>
-            No credit card required for your 30-day trial
+            No credit card needed. Everyone else gets a free 30-day trial.
           </p>
         </section>
       </main>
