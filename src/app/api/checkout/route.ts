@@ -30,11 +30,17 @@ export async function POST(request: NextRequest) {
       return back('unavailable');
     }
 
+    // 10% GST, already included in the price. Shows GST on invoices without needing Stripe Tax.
+    const gst = (await stripe.taxRates.list({ active: true, inclusive: true, limit: 100 })).data.find(
+      (r) => r.display_name === 'GST' && r.percentage === 10
+    );
+
     const spotsLeft = await foundingSpotsLeft();
     const founding = spotsLeft !== null && spotsLeft > 0;
     const trialDays = founding ? FOUNDING.freeDays : plan.trialDays;
 
     const subscription_data: Stripe.Checkout.SessionCreateParams.SubscriptionData = {
+      billing_mode: { type: 'flexible' },
       description: founding
         ? `Founding vendor - ${plan.name} free for 12 months`
         : `${plan.name} plan`,
@@ -48,7 +54,7 @@ export async function POST(request: NextRequest) {
 
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
-      line_items: [{ price: price.id, quantity: 1 }],
+      line_items: [{ price: price.id, quantity: 1, ...(gst ? { tax_rates: [gst.id] } : {}) }],
       subscription_data,
       payment_method_collection: trialDays > 0 ? 'if_required' : 'always',
       billing_address_collection: 'auto',
