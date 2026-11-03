@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react';
 import type { Map as LeafletMap } from 'leaflet';
 import { getTileConfig } from '@/lib/geo';
+import { overlapTile } from '@/lib/map-helpers';
 
 interface MiniMapProps {
   lat: number;
@@ -39,7 +40,9 @@ export default function MiniMap({ lat, lng, vendorName }: MiniMapProps) {
         tileSize: tiles.tileSize,
         zoomOffset: tiles.zoomOffset,
         maxZoom: tiles.maxZoom,
-      }).addTo(map);
+      })
+        .on('tileload', overlapTile(tiles.tileSize))
+        .addTo(map);
 
       const icon = L.divIcon({
         className: '',

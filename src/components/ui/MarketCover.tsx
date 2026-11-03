@@ -1,3 +1,4 @@
+import { Tent } from 'lucide-react';
 import type { Market } from '@/types';
 
 /**
@@ -14,7 +15,7 @@ export function MarketCover({ market, height = 'h-40' }: { market: Market; heigh
       }}
       aria-hidden="true"
     >
-      <span className="text-4xl mb-1">🏪</span>
+      <Tent size={40} strokeWidth={1.6} className="mb-1" style={{ color: 'var(--teal)' }} />
       <span className="text-[13px] font-semibold" style={{ color: 'var(--text)' }}>
         {market.suburb}, {market.state}
       </span>
