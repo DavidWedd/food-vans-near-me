@@ -11,10 +11,12 @@ import { VendorGrid } from '@/components/vendor/VendorGrid';
 import { SEED_VENDORS, SEED_MARKETS } from '@/lib/seed-data';
 import { filterVendors, matchesText } from '@/lib/utils';
 import { geocodePlace } from '@/lib/geo';
+import { isInLiveArea, LIVE_AREA_NAME } from '@/lib/regions';
 import type { FilterState, Vendor } from '@/types';
 import { StarRating } from '@/components/vendor/StarRating';
 import { Badge } from '@/components/ui/Badge';
 import { ArrowRight } from 'lucide-react';
+import { MarketCover } from '@/components/ui/MarketCover';
 
 const VendorMap = dynamic(() => import('@/components/map/VendorMap'), {
   ssr: false,
@@ -42,7 +44,9 @@ const DEFAULT_FILTERS: FilterState = {
   centre: null,
 };
 
-const VENDOR_OF_WEEK = SEED_VENDORS.find((v) => v.slug === 'smoky-bros-bbq')!;
+// Premium vendors become eligible for Vendor of the Week once real vendors join
+const VENDOR_OF_WEEK = SEED_VENDORS.find((v) => v.subscription_tier === 'premium');
+const HAS_VENDORS = SEED_VENDORS.length > 0;
 
 export default function HomePage() {
   const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS);
@@ -91,6 +95,13 @@ export default function HomePage() {
     setLocationMessage('Finding your location…');
     navigator.geolocation.getCurrentPosition(
       (pos) => {
+        const { latitude, longitude } = pos.coords;
+        if (!isInLiveArea(latitude, longitude)) {
+          setLocationMessage(
+            `We're only in ${LIVE_AREA_NAME} for now - the rest of Australia is coming. Try searching for a suburb in ${LIVE_AREA_NAME}.`
+          );
+          return;
+        }
         setLocationMessage(null);
         handleFiltersChange({
           ...filters,
@@ -126,10 +137,33 @@ export default function HomePage() {
       />
 
       <main id="main-content">
+        {/* Intro */}
+        <div className="max-w-7xl mx-auto px-4 pt-5 pb-4">
+          <h1
+            className="text-[26px] sm:text-[32px] font-extrabold leading-tight"
+            style={{ fontFamily: 'var(--font-display)', color: 'var(--text)' }}
+          >
+            Tasmania&apos;s food van map
+          </h1>
+          <p className="text-[15px] mt-1" style={{ color: 'var(--muted)' }}>
+            Find food vans, coffee carts and market stalls trading near you, right now.
+          </p>
+          {locationMessage && (
+            <p
+              className="text-[14px] mt-3 rounded-xl px-4 py-3"
+              role="status"
+              style={{ color: 'var(--text)', backgroundColor: 'var(--surface-off)' }}
+            >
+              {locationMessage}
+            </p>
+          )}
+        </div>
+
         {/* Hero Map */}
         <section aria-label="Food van locations map">
           <VendorMap
             vendors={filtered}
+            markets={SEED_MARKETS}
             centre={filters.centre ?? null}
             radiusKm={filters.radius}
             onVendorSelect={handleVendorSelect}
@@ -147,33 +181,59 @@ export default function HomePage() {
           </ul>
         </section>
 
-        {/* Filter bar */}
-        <FilterBar filters={filters} onChange={handleFiltersChange} />
+        {HAS_VENDORS ? (
+          <>
+            {/* Filter bar */}
+            <FilterBar filters={filters} onChange={handleFiltersChange} />
 
-        {/* Vendor grid section */}
-        <section
-          className="max-w-7xl mx-auto px-4 py-8"
-          aria-label="Food van listings"
-        >
-          <h2
-            className="text-[22px] font-bold mb-6"
-            style={{ fontFamily: 'var(--font-display)', color: 'var(--text)' }}
+            {/* Vendor grid section */}
+            <section
+              className="max-w-7xl mx-auto px-4 py-8"
+              aria-label="Food van listings"
+            >
+              <h2
+                className="text-[22px] font-bold mb-6"
+                style={{ fontFamily: 'var(--font-display)', color: 'var(--text)' }}
+              >
+                {filters.centre
+                  ? `${filtered.length} food van${filtered.length !== 1 ? 's' : ''} within ${filters.radius}km of ${filters.centre.label}`
+                  : `${filtered.length} food van${filtered.length !== 1 ? 's' : ''} found`}
+              </h2>
+              <VendorGrid
+                vendors={filtered}
+                loading={isFiltering}
+                selectedVendorId={selectedVendorId}
+              />
+            </section>
+
+          </>
+        ) : (
+          <section
+            className="max-w-3xl mx-auto px-4 py-12 text-center"
+            aria-label="Launching soon"
           >
-            {filters.centre
-              ? `${filtered.length} food van${filtered.length !== 1 ? 's' : ''} within ${filters.radius}km of ${filters.centre.label}`
-              : `${filtered.length} food van${filtered.length !== 1 ? 's' : ''} found`}
-          </h2>
-          {locationMessage && (
-            <p className="text-[14px] -mt-4 mb-6" role="status" style={{ color: 'var(--muted)' }}>
-              {locationMessage}
+            <div className="text-5xl mb-4" aria-hidden="true">🚚</div>
+            <h2
+              className="text-[24px] sm:text-[28px] font-extrabold mb-3 leading-tight"
+              style={{ fontFamily: 'var(--font-display)', color: 'var(--text)' }}
+            >
+              Tasmania&apos;s food van map is coming
+            </h2>
+            <p className="text-[16px] leading-relaxed mb-6" style={{ color: 'var(--muted)' }}>
+              We&apos;re signing up our first food vans, coffee carts and mobile food businesses
+              now, starting in Hobart. In the meantime, the markets on the map are a great place
+              to find them.
             </p>
-          )}
-          <VendorGrid
-            vendors={filtered}
-            loading={isFiltering}
-            selectedVendorId={selectedVendorId}
-          />
-        </section>
+            <Link
+              href="/join"
+              className="inline-flex items-center gap-2 rounded-full px-6 py-3 text-[15px] font-semibold text-white"
+              style={{ backgroundColor: 'var(--primary)' }}
+            >
+              Run a food van? Be one of the first listed
+              <ArrowRight size={16} />
+            </Link>
+          </section>
+        )}
 
         {/* Vendor of the Week */}
         {VENDOR_OF_WEEK && (
@@ -261,7 +321,7 @@ export default function HomePage() {
               className="text-[22px] font-bold mb-6"
               style={{ fontFamily: 'var(--font-display)', color: 'var(--text)' }}
             >
-              Markets &amp; Events Near You
+              Markets where you&apos;ll find food vans
             </h2>
             <div className="flex gap-5 overflow-x-auto pb-4 -mx-4 px-4">
               {SEED_MARKETS.map((market) => (
@@ -283,14 +343,7 @@ export default function HomePage() {
                   }}
                 >
                   <div className="relative h-40 overflow-hidden">
-                    <Image
-                      src={market.cover_photo_url || ''}
-                      alt={market.name}
-                      fill
-                      className="object-cover transition-transform duration-300 group-hover:scale-105"
-                      sizes="300px"
-                      loading="lazy"
-                    />
+                    <MarketCover market={market} />
                   </div>
                   <div className="p-4">
                     <h3
