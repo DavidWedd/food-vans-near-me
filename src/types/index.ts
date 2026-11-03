@@ -100,4 +100,6 @@ export interface FilterState {
   state: AustralianState | 'ALL';
   searchQuery: string;
   radius: 2 | 5 | 10 | 20;
+  /** Where to measure distance from: the user's location or a searched suburb/postcode. */
+  centre?: { lat: number; lng: number; label: string } | null;
 }

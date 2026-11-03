@@ -1,13 +1,15 @@
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import type { CuisineType, DietaryTag, FilterState, ScheduleEntry, Vendor, VendorLocation } from '@/types';
+import { distanceKm } from '@/lib/geo';
 
 export function cn(...inputs: ClassValue[]): string {
   return twMerge(clsx(inputs));
 }
 
 export function formatDistance(km: number): string {
-  if (km < 1) return `${Math.round(km * 1000)}m away`;
+  if (km < 0.1) return 'Under 100m away';
+  if (km < 1) return `${Math.round(km * 10) * 100}m away`;
   return `${km.toFixed(1)}km away`;
 }
 
@@ -93,34 +95,62 @@ export function getNextSchedule(schedule?: ScheduleEntry[]): string | null {
   return `${dayLabel} ${timeLabel} · ${entry.location_name}`;
 }
 
+/** Does the text search match a van's name, suburb, state or cuisine? */
+export function matchesText(v: Vendor, query: string): boolean {
+  const q = query.trim().toLowerCase();
+  if (!q) return true;
+  return (
+    v.business_name.toLowerCase().includes(q) ||
+    v.suburb.toLowerCase().includes(q) ||
+    v.state.toLowerCase().includes(q) ||
+    v.cuisine_type.some((c) => c.toLowerCase().includes(q))
+  );
+}
+
+function vendorPoint(v: Vendor): { lat: number; lng: number } | null {
+  if (v.location?.lat != null && v.location?.lng != null) return v.location;
+  const s = v.schedule?.find((e) => e.lat != null && e.lng != null);
+  return s ? { lat: s.lat as number, lng: s.lng as number } : null;
+}
+
 export function filterVendors(vendors: Vendor[], filters: FilterState): Vendor[] {
-  return vendors.filter((v) => {
-    if (filters.openNow && !isVendorLive(v.location)) return false;
+  const { centre } = filters;
 
-    if (filters.cuisineTypes.length > 0) {
-      const hasMatch = filters.cuisineTypes.some((c) => v.cuisine_type.includes(c));
-      if (!hasMatch) return false;
-    }
+  // With a centre (near me / suburb / postcode): work out distances,
+  // keep vans inside the radius, nearest first. Text search is not applied,
+  // because the search box text is the place name.
+  if (centre) {
+    return vendors
+      .map((v) => {
+        const p = vendorPoint(v);
+        return { ...v, distance_km: p ? distanceKm(centre, p) : undefined };
+      })
+      .filter((v) => v.distance_km !== undefined && v.distance_km <= filters.radius)
+      .filter((v) => passesFilters(v, { ...filters, searchQuery: '' }))
+      .sort((a, b) => (a.distance_km ?? 0) - (b.distance_km ?? 0));
+  }
 
-    if (filters.dietaryTags.length > 0) {
-      const hasAll = filters.dietaryTags.every((d) => v.dietary_tags.includes(d));
-      if (!hasAll) return false;
-    }
+  return vendors.filter((v) => passesFilters(v, filters));
+}
 
-    if (filters.state !== 'ALL' && v.state !== filters.state) return false;
+function passesFilters(v: Vendor, filters: FilterState): boolean {
+  if (filters.openNow && !isVendorLive(v.location)) return false;
 
-    if (filters.searchQuery) {
-      const q = filters.searchQuery.toLowerCase();
-      const match =
-        v.business_name.toLowerCase().includes(q) ||
-        v.suburb.toLowerCase().includes(q) ||
-        v.state.toLowerCase().includes(q) ||
-        v.cuisine_type.some((c) => c.toLowerCase().includes(q));
-      if (!match) return false;
-    }
+  if (filters.cuisineTypes.length > 0) {
+    const hasMatch = filters.cuisineTypes.some((c) => v.cuisine_type.includes(c));
+    if (!hasMatch) return false;
+  }
 
-    return true;
-  });
+  if (filters.dietaryTags.length > 0) {
+    const hasAll = filters.dietaryTags.every((d) => v.dietary_tags.includes(d));
+    if (!hasAll) return false;
+  }
+
+  if (filters.state !== 'ALL' && v.state !== filters.state) return false;
+
+  if (filters.searchQuery && !matchesText(v, filters.searchQuery)) return false;
+
+  return true;
 }
 
 export function dietaryShortLabel(tag: DietaryTag): string {

@@ -3,13 +3,14 @@
 import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { FilterBar } from '@/components/vendor/FilterBar';
 import { VendorGrid } from '@/components/vendor/VendorGrid';
 import { SEED_VENDORS, SEED_MARKETS } from '@/lib/seed-data';
-import { filterVendors } from '@/lib/utils';
+import { filterVendors, matchesText } from '@/lib/utils';
+import { geocodePlace } from '@/lib/geo';
 import type { FilterState, Vendor } from '@/types';
 import { StarRating } from '@/components/vendor/StarRating';
 import { Badge } from '@/components/ui/Badge';
@@ -38,6 +39,7 @@ const DEFAULT_FILTERS: FilterState = {
   state: 'ALL',
   searchQuery: '',
   radius: 5,
+  centre: null,
 };
 
 const VENDOR_OF_WEEK = SEED_VENDORS.find((v) => v.slug === 'smoky-bros-bbq')!;
@@ -47,36 +49,77 @@ export default function HomePage() {
   const [selectedVendorId, setSelectedVendorId] = useState<string | null>(null);
   const [isFiltering, setIsFiltering] = useState(false);
 
+  const [locationMessage, setLocationMessage] = useState<string | null>(null);
+
   const handleFiltersChange = (next: FilterState) => {
     setIsFiltering(true);
     setFilters(next);
     setTimeout(() => setIsFiltering(false), 300);
   };
 
+  // Typing clears any previous place; the effect below looks the place up.
+  const handleSearchChange = (q: string) => {
+    setLocationMessage(null);
+    handleFiltersChange({ ...filters, searchQuery: q, centre: null });
+  };
+
+  // If the search text doesn't match a van name or cuisine, treat it as a
+  // suburb, town or postcode and search around it.
+  useEffect(() => {
+    const q = filters.searchQuery.trim();
+    if (q.length < 3 || filters.centre) return;
+    if (SEED_VENDORS.some((v) => matchesText(v, q))) return;
+
+    const controller = new AbortController();
+    const timer = setTimeout(async () => {
+      const place = await geocodePlace(q, controller.signal);
+      if (place) {
+        setFilters((f) => (f.searchQuery.trim() === q ? { ...f, centre: place } : f));
+      }
+    }, 400);
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [filters.searchQuery, filters.centre]);
+
   const handleLocateMe = () => {
-    if (!navigator.geolocation) return;
-    navigator.geolocation.getCurrentPosition((pos) => {
-      setFilters((f) => ({
-        ...f,
-        searchQuery: `${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`,
-      }));
-    });
+    if (!navigator.geolocation) {
+      setLocationMessage('Your browser can\'t share your location. Try typing your suburb or postcode instead.');
+      return;
+    }
+    setLocationMessage('Finding your location…');
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setLocationMessage(null);
+        handleFiltersChange({
+          ...filters,
+          searchQuery: '',
+          centre: { lat: pos.coords.latitude, lng: pos.coords.longitude, label: 'you' },
+        });
+      },
+      () => {
+        setLocationMessage('We couldn\'t get your location. Try typing your suburb or postcode instead.');
+      },
+      { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
+    );
   };
 
   const filtered = useMemo(() => filterVendors(SEED_VENDORS, filters), [filters]);
 
-  const handleVendorSelect = (vendor: Vendor) => {
+  // Stable callback so the map isn't rebuilt every time the page re-renders
+  const handleVendorSelect = useCallback((vendor: Vendor) => {
     setSelectedVendorId(vendor.id);
     const el = document.getElementById(`vendor-card-${vendor.id}`);
     el?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  };
+  }, []);
 
   return (
     <>
       <Header
         searchQuery={filters.searchQuery}
         radius={filters.radius}
-        onSearchChange={(q) => handleFiltersChange({ ...filters, searchQuery: q })}
+        onSearchChange={handleSearchChange}
         onRadiusChange={(r) => handleFiltersChange({ ...filters, radius: r })}
         onLocateMe={handleLocateMe}
         showSearch
@@ -87,6 +130,8 @@ export default function HomePage() {
         <section aria-label="Food van locations map">
           <VendorMap
             vendors={filtered}
+            centre={filters.centre ?? null}
+            radiusKm={filters.radius}
             onVendorSelect={handleVendorSelect}
             className="w-full"
           />
@@ -114,8 +159,15 @@ export default function HomePage() {
             className="text-[22px] font-bold mb-6"
             style={{ fontFamily: 'var(--font-display)', color: 'var(--text)' }}
           >
-            {filtered.length} food van{filtered.length !== 1 ? 's' : ''} found near you
+            {filters.centre
+              ? `${filtered.length} food van${filtered.length !== 1 ? 's' : ''} within ${filters.radius}km of ${filters.centre.label}`
+              : `${filtered.length} food van${filtered.length !== 1 ? 's' : ''} found`}
           </h2>
+          {locationMessage && (
+            <p className="text-[14px] -mt-4 mb-6" role="status" style={{ color: 'var(--muted)' }}>
+              {locationMessage}
+            </p>
+          )}
           <VendorGrid
             vendors={filtered}
             loading={isFiltering}

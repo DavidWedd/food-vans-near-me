@@ -4,20 +4,19 @@ import { useEffect, useRef, useCallback } from 'react';
 import type { Map as LeafletMap } from 'leaflet';
 import type { Vendor } from '@/types';
 import { cuisineEmoji, isVendorLive } from '@/lib/utils';
+import { getTileConfig, HOBART_CENTRE, type SearchCentre } from '@/lib/geo';
 
 interface VendorMapProps {
   vendors: Vendor[];
   onVendorSelect?: (vendor: Vendor) => void;
+  /** Search centre (user's location or a searched suburb). Draws the radius circle. */
+  centre?: SearchCentre | null;
+  radiusKm?: number;
   className?: string;
 }
 
-const CARTO_TILES =
-  'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
-const ATTRIBUTION =
-  '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>';
-
-const DEFAULT_CENTER: [number, number] = [-33.8688, 151.2093];
-const DEFAULT_ZOOM = 5;
+const DEFAULT_CENTER: [number, number] = [HOBART_CENTRE.lat, HOBART_CENTRE.lng];
+const DEFAULT_ZOOM = 12;
 
 function createPinHtml(vendor: Vendor, live: boolean): string {
   const emoji = cuisineEmoji[vendor.cuisine_type[0]] || '🍽️';
@@ -59,7 +58,13 @@ function createPopupHtml(vendor: Vendor, live: boolean): string {
 </div>`;
 }
 
-export default function VendorMap({ vendors, onVendorSelect, className = '' }: VendorMapProps) {
+export default function VendorMap({
+  vendors,
+  onVendorSelect,
+  centre = null,
+  radiusKm = 5,
+  className = '',
+}: VendorMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<LeafletMap | null>(null);
 
@@ -80,11 +85,13 @@ export default function VendorMap({ vendors, onVendorSelect, className = '' }: V
     });
     mapRef.current = map;
 
-    // CartoDB Voyager tiles
-    L.tileLayer(CARTO_TILES, {
-      attribution: ATTRIBUTION,
-      subdomains: 'abcd',
-      maxZoom: 19,
+    // Map tiles: Mapbox if the key is set, otherwise OpenStreetMap
+    const tiles = getTileConfig();
+    L.tileLayer(tiles.url, {
+      attribution: tiles.attribution,
+      tileSize: tiles.tileSize,
+      zoomOffset: tiles.zoomOffset,
+      maxZoom: tiles.maxZoom,
     }).addTo(map);
 
     // Marker cluster group
@@ -137,8 +144,27 @@ export default function VendorMap({ vendors, onVendorSelect, className = '' }: V
 
     map.addLayer(clusterGroup);
 
-    // Fit bounds to markers if we have any
-    if (vendors.some((v) => v.location?.lat)) {
+    if (centre) {
+      // Show the search area: a circle of the chosen radius around the centre
+      const circle = L.circle([centre.lat, centre.lng], {
+        radius: radiusKm * 1000,
+        color: '#E07B00',
+        weight: 1.5,
+        fillColor: '#E07B00',
+        fillOpacity: 0.06,
+      }).addTo(map);
+      L.circleMarker([centre.lat, centre.lng], {
+        radius: 7,
+        fillColor: '#E07B00',
+        fillOpacity: 1,
+        color: 'white',
+        weight: 2,
+      })
+        .addTo(map)
+        .bindTooltip(centre.label === 'you' ? 'You are here' : centre.label);
+      map.fitBounds(circle.getBounds(), { padding: [20, 20] });
+    } else if (vendors.some((v) => v.location?.lat)) {
+      // Fit bounds to markers if we have any
       try {
         const bounds = clusterGroup.getBounds();
         if (bounds.isValid()) {
@@ -182,7 +208,7 @@ export default function VendorMap({ vendors, onVendorSelect, className = '' }: V
     });
 
     new LocateControl({ position: 'topright' }).addTo(map);
-  }, [vendors, onVendorSelect]);
+  }, [vendors, onVendorSelect, centre, radiusKm]);
 
   useEffect(() => {
     initMap();
