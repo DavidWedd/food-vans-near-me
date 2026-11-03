@@ -2,7 +2,10 @@ import { Check, X as XIcon } from 'lucide-react';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import type { Metadata } from 'next';
-import { FOUNDING_SPOT_MAILTO } from '@/lib/business';
+import { BUSINESS } from '@/lib/business';
+import { PlanButton } from '@/components/ui/PlanButton';
+import { FOUNDING, PLANS, formatPrice } from '@/lib/plans';
+import { foundingSpotsLeft, getStripe } from '@/lib/stripe';
 
 export const metadata: Metadata = {
   title: 'List Your Food Van - Food Vans Near Me',
@@ -37,11 +40,11 @@ const FAQS = [
   },
   {
     q: 'Do I need an ABN to sign up?',
-    a: 'You don\'t need an ABN to create a free trial account and explore the platform. However, you\'ll need a valid ABN once you upgrade to a paid plan, in accordance with Australian business requirements.',
+    a: 'No. You can add your ABN at checkout if you have one, and it will appear on your tax invoices.',
   },
   {
     q: 'What is the founding vendor offer?',
-    a: 'The first 15 Tasmanian food vans, coffee carts and mobile food businesses to join get the Basic plan free for 12 months. No credit card needed. We\'ll remind you well before the free year ends, and you only pay if you choose to continue.',
+    a: 'The first 15 Tasmanian food vans, coffee carts and mobile food businesses to join get any plan free for 12 months. No credit card needed. We\'ll remind you well before the free year ends, and you only pay if you add a card and choose to continue.',
   },
   {
     q: 'Can I cancel anytime?',
@@ -78,7 +81,20 @@ function FeatureRow({ label, basic, pro, premium }: { label: string; basic: bool
   );
 }
 
-export default function JoinPage() {
+export default async function JoinPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ checkout?: string }>;
+}) {
+  const { checkout } = await searchParams;
+  const checkoutEnabled = getStripe() !== null;
+  const spotsLeft = checkoutEnabled ? await foundingSpotsLeft() : null;
+  // If we can't count (e.g. Stripe not set up yet), keep showing the offer.
+  const foundingOpen = spotsLeft === null || spotsLeft > 0;
+  const trialLabel = (days: number, cents: number) =>
+    foundingOpen ? `Free for 12 months, then ${formatPrice(cents)}/mo` : days > 0 ? `Free ${days}-day trial, then ${formatPrice(cents)}/mo` : `${formatPrice(cents)}/mo`;
+  const ctaLabel = (days: number) => (foundingOpen ? 'Claim free year' : days > 0 ? 'Start free trial' : 'Get started');
+
   return (
     <>
       <Header showSearch={false} />
@@ -109,6 +125,18 @@ export default function JoinPage() {
           aria-label="Pricing plans"
           style={{ backgroundColor: 'var(--surface-off)' }}
         >
+          {checkout && (
+            <div
+              role="alert"
+              className="max-w-3xl mx-auto mb-6 rounded-xl border p-4 text-center text-[15px]"
+              style={{ borderColor: 'var(--border)', backgroundColor: 'var(--surface)', color: 'var(--text)' }}
+            >
+              Sorry, sign-up isn&apos;t working right now. Please try again shortly, or email{' '}
+              <a href={`mailto:${BUSINESS.email}`} style={{ color: 'var(--primary)' }}>{BUSINESS.email}</a> and
+              we&apos;ll set you up.
+            </div>
+          )}
+          {foundingOpen && (
           <div
             className="max-w-3xl mx-auto mb-10 rounded-2xl border-2 p-6 text-center"
             style={{ borderColor: 'var(--primary)', backgroundColor: 'color-mix(in srgb, var(--primary) 7%, var(--surface))' }}
@@ -117,19 +145,18 @@ export default function JoinPage() {
               Founding vendor offer
             </p>
             <p className="text-[20px] font-extrabold mb-2" style={{ fontFamily: 'var(--font-display)', color: 'var(--text)' }}>
-              The first 15 Tasmanian vendors get Basic free for 12 months
+              The first {FOUNDING.spots} Tasmanian vendors get any plan free for 12 months
             </p>
             <p className="text-[15px] mb-4" style={{ color: 'var(--muted)' }}>
-              No card, no catch. Everyone after that gets a free 30-day trial.
+              No card, no catch. Pick a plan below to claim your spot.
             </p>
-            <a
-              href={FOUNDING_SPOT_MAILTO}
-              className="inline-flex items-center rounded-full px-6 py-3 text-[15px] font-semibold text-white"
-              style={{ backgroundColor: 'var(--primary)' }}
-            >
-              Claim a founding spot
-            </a>
+            {spotsLeft !== null && (
+              <p className="text-[15px] font-bold" style={{ color: 'var(--primary)' }}>
+                {spotsLeft} of {FOUNDING.spots} spots left
+              </p>
+            )}
           </div>
+          )}
           <div className="max-w-5xl mx-auto">
             {/* Desktop: feature table */}
             <div className="hidden lg:block">
@@ -147,14 +174,15 @@ export default function JoinPage() {
                         }}
                       >
                         <p className="font-bold text-[18px] mb-1" style={{ fontFamily: 'var(--font-display)', color: 'var(--text)' }}>Basic</p>
-                        <p className="text-[13px] mb-3" style={{ color: 'var(--muted)' }}>Free 30-day trial, then $19/mo</p>
-                        <a
-                          href={FOUNDING_SPOT_MAILTO}
+                        <p className="text-[13px] mb-3" style={{ color: 'var(--muted)' }}>{trialLabel(PLANS.basic.trialDays, PLANS.basic.priceCents)}</p>
+                        <PlanButton
+                          plan="basic"
+                          enabled={checkoutEnabled}
                           className="block text-center rounded-full py-2 text-[14px] font-semibold border"
                           style={{ borderColor: 'var(--border)', color: 'var(--text)' }}
                         >
-                          Start Free Trial
-                        </a>
+                          {ctaLabel(PLANS.basic.trialDays)}
+                        </PlanButton>
                       </div>
                     </th>
                     {/* Pro */}
@@ -176,14 +204,15 @@ export default function JoinPage() {
                             Most Popular
                           </span>
                         </div>
-                        <p className="text-[13px] mb-3" style={{ color: 'var(--muted)' }}>$39/mo</p>
-                        <a
-                          href={FOUNDING_SPOT_MAILTO}
+                        <p className="text-[13px] mb-3" style={{ color: 'var(--muted)' }}>{trialLabel(PLANS.pro.trialDays, PLANS.pro.priceCents)}</p>
+                        <PlanButton
+                          plan="pro"
+                          enabled={checkoutEnabled}
                           className="block text-center rounded-full py-2 text-[14px] font-semibold text-white"
                           style={{ backgroundColor: 'var(--primary)' }}
                         >
-                          Start Free Trial
-                        </a>
+                          {ctaLabel(PLANS.pro.trialDays)}
+                        </PlanButton>
                       </div>
                     </th>
                     {/* Premium */}
@@ -196,14 +225,15 @@ export default function JoinPage() {
                         }}
                       >
                         <p className="font-bold text-[18px] mb-1" style={{ fontFamily: 'var(--font-display)', color: 'var(--text)' }}>Premium</p>
-                        <p className="text-[13px] mb-3" style={{ color: 'var(--muted)' }}>$69/mo</p>
-                        <a
-                          href={FOUNDING_SPOT_MAILTO}
+                        <p className="text-[13px] mb-3" style={{ color: 'var(--muted)' }}>{trialLabel(PLANS.premium.trialDays, PLANS.premium.priceCents)}</p>
+                        <PlanButton
+                          plan="premium"
+                          enabled={checkoutEnabled}
                           className="block text-center rounded-full py-2 text-[14px] font-semibold text-white"
                           style={{ backgroundColor: 'var(--teal)' }}
                         >
-                          Get Premium
-                        </a>
+                          {foundingOpen ? 'Claim free year' : 'Get Premium'}
+                        </PlanButton>
                       </div>
                     </th>
                   </tr>
@@ -223,26 +253,29 @@ export default function JoinPage() {
             <div className="lg:hidden grid grid-cols-1 sm:grid-cols-3 gap-5">
               {[
                 {
+                  id: 'basic' as const,
                   name: 'Basic',
-                  price: 'Free trial, then $19/mo',
+                  price: trialLabel(PLANS.basic.trialDays, PLANS.basic.priceCents),
                   highlight: false,
-                  cta: 'Start Free Trial',
+                  cta: ctaLabel(PLANS.basic.trialDays),
                   ctaStyle: { borderColor: 'var(--border)', color: 'var(--text)' } as React.CSSProperties,
                   ctaClass: 'border',
                 },
                 {
+                  id: 'pro' as const,
                   name: 'Pro',
-                  price: '$39/mo',
+                  price: trialLabel(PLANS.pro.trialDays, PLANS.pro.priceCents),
                   highlight: true,
-                  cta: 'Start Free Trial',
+                  cta: ctaLabel(PLANS.pro.trialDays),
                   ctaStyle: { backgroundColor: 'var(--primary)', color: 'white' } as React.CSSProperties,
                   ctaClass: '',
                 },
                 {
+                  id: 'premium' as const,
                   name: 'Premium',
-                  price: '$69/mo',
+                  price: trialLabel(PLANS.premium.trialDays, PLANS.premium.priceCents),
                   highlight: false,
-                  cta: 'Get Premium',
+                  cta: foundingOpen ? 'Claim free year' : 'Get Premium',
                   ctaStyle: { backgroundColor: 'var(--teal)', color: 'white' } as React.CSSProperties,
                   ctaClass: '',
                 },
@@ -284,13 +317,14 @@ export default function JoinPage() {
                       );
                     })}
                   </ul>
-                  <a
-                    href={FOUNDING_SPOT_MAILTO}
+                  <PlanButton
+                    plan={plan.id}
+                    enabled={checkoutEnabled}
                     className={`block text-center rounded-full py-2.5 text-[14px] font-semibold ${plan.ctaClass}`}
                     style={plan.ctaStyle}
                   >
                     {plan.cta}
-                  </a>
+                  </PlanButton>
                 </div>
               ))}
             </div>
@@ -394,18 +428,19 @@ export default function JoinPage() {
             Ready to get started?
           </h2>
           <p className="text-[16px] mb-8" style={{ color: 'var(--muted)' }}>
-            The first 15 Tasmanian vendors get the Basic plan free for 12 months. Email us to claim
-            your spot and we&apos;ll set you up personally.
+            {foundingOpen
+              ? `The first ${FOUNDING.spots} Tasmanian vendors get any plan free for 12 months. Sign up in a couple of minutes and we'll help set up your listing.`
+              : 'Sign up in a couple of minutes and we\'ll help set up your listing.'}
           </p>
           <a
-            href={FOUNDING_SPOT_MAILTO}
+            href="#pricing"
             className="inline-flex items-center gap-2 rounded-full px-8 py-4 text-[16px] font-bold text-white"
             style={{ backgroundColor: 'var(--primary)' }}
           >
-            Claim a founding spot
+            {foundingOpen ? 'Claim a founding spot' : 'Choose a plan'}
           </a>
           <p className="mt-3 text-[13px]" style={{ color: 'var(--muted)' }}>
-            No credit card needed. Everyone else gets a free 30-day trial.
+            No credit card needed for free periods. Cancel any time.
           </p>
         </section>
       </main>
