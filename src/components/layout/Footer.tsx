@@ -30,6 +30,7 @@ function FoodVanLogo({ size = 24 }: { size?: number }) {
 }
 
 const FOOD_SAFETY_LINKS = [
+  { label: 'TAS Department of Health', url: 'https://www.health.tas.gov.au/node/4656' },
   { label: 'NSW Food Authority', url: 'https://www.foodauthority.nsw.gov.au' },
   { label: 'VIC FoodTrader', url: 'https://www.foodtrader.vic.gov.au' },
   {
@@ -38,7 +39,6 @@ const FOOD_SAFETY_LINKS = [
   },
   { label: 'WA Dept of Health', url: 'https://ww2.health.wa.gov.au/Articles/F_I/Food-businesses' },
   { label: 'SA Food Safety', url: 'https://www.sahealth.sa.gov.au/foodsafety' },
-  { label: 'TAS DPIPWE', url: 'https://dpipwe.tas.gov.au/biosecurity-tasmania/food-safety' },
   { label: 'ACT Health', url: 'https://www.health.act.gov.au/businesses/food-safety' },
   { label: 'NT Health', url: 'https://nt.gov.au/industry/food-safety-and-regulation' },
 ];
@@ -63,8 +63,8 @@ export function Footer() {
               </span>
             </div>
             <p className="text-[14px] leading-relaxed" style={{ color: 'var(--muted)' }}>
-              Find Australia&apos;s best mobile food vendors — food trucks, coffee carts, and market
-              stalls near you.
+              Tasmania&apos;s food van map - find food trucks, coffee carts and market stalls near
+              you.
             </p>
           </div>
 
@@ -174,7 +174,7 @@ export function Footer() {
         >
           <p>© 2026 Food Vans Near Me · Australian English · ABN XXXXXXXXX</p>
           <p>
-            Made with ❤️ for hungry Australians
+            Made in Hobart for hungry Tasmanians
           </p>
         </div>
       </div>

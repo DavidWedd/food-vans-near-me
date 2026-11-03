@@ -2,12 +2,15 @@
 
 import { useEffect, useRef, useCallback } from 'react';
 import type { Map as LeafletMap } from 'leaflet';
-import type { Vendor } from '@/types';
+import type { Market, Vendor } from '@/types';
 import { cuisineEmoji, isVendorLive } from '@/lib/utils';
 import { getTileConfig, HOBART_CENTRE, type SearchCentre } from '@/lib/geo';
+import { liveBounds } from '@/lib/regions';
 
 interface VendorMapProps {
   vendors: Vendor[];
+  /** Markets shown as their own pins (not clustered with vans). */
+  markets?: Market[];
   onVendorSelect?: (vendor: Vendor) => void;
   /** Search centre (user's location or a searched suburb). Draws the radius circle. */
   centre?: SearchCentre | null;
@@ -60,6 +63,7 @@ function createPopupHtml(vendor: Vendor, live: boolean): string {
 
 export default function VendorMap({
   vendors,
+  markets = [],
   onVendorSelect,
   centre = null,
   radiusKm = 5,
@@ -144,6 +148,27 @@ export default function VendorMap({
 
     map.addLayer(clusterGroup);
 
+    // Market pins
+    markets.forEach((m) => {
+      const icon = L.divIcon({
+        className: '',
+        html: `<div style="width:34px;height:34px;border-radius:10px;background:#01696F;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 2px 8px rgba(0,0,0,0.3);border:2px solid white;" aria-label="${m.name}">🏪</div>`,
+        iconSize: [34, 34],
+        iconAnchor: [17, 17],
+        popupAnchor: [0, -20],
+      });
+      L.marker([m.lat, m.lng], { icon })
+        .bindPopup(
+          `<div style="font-family:Satoshi,ui-sans-serif,sans-serif;padding:12px;min-width:180px;max-width:240px;">
+            <p style="font-weight:700;font-size:15px;color:#2A2520;margin:0 0 4px;">${m.name}</p>
+            <p style="font-size:12px;color:#7A776F;margin:0 0 8px;">${m.day_of_week ?? ''}</p>
+            <a href="/markets#${m.slug}" style="color:#E07B00;font-size:13px;font-weight:700;text-decoration:none;">Market details →</a>
+          </div>`,
+          { maxWidth: 260 }
+        )
+        .addTo(map);
+    });
+
     if (centre) {
       // Show the search area: a circle of the chosen radius around the centre
       const circle = L.circle([centre.lat, centre.lng], {
@@ -163,6 +188,9 @@ export default function VendorMap({
         .addTo(map)
         .bindTooltip(centre.label === 'you' ? 'You are here' : centre.label);
       map.fitBounds(circle.getBounds(), { padding: [20, 20] });
+    } else if (vendors.length < 2) {
+      // Opening view: the whole live area (Tasmania for now)
+      map.fitBounds(liveBounds(), { padding: [10, 10] });
     } else if (vendors.some((v) => v.location?.lat)) {
       // Fit bounds to markers if we have any
       try {
@@ -208,7 +236,7 @@ export default function VendorMap({
     });
 
     new LocateControl({ position: 'topright' }).addTo(map);
-  }, [vendors, onVendorSelect, centre, radiusKm]);
+  }, [vendors, markets, onVendorSelect, centre, radiusKm]);
 
   useEffect(() => {
     initMap();

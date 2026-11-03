@@ -4,17 +4,23 @@ import 'leaflet.markercluster/dist/MarkerCluster.css';
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 import './globals.css';
 
+const SITE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://foodvansnear.me';
+
 export const metadata: Metadata = {
-  title: 'Food Vans Near Me — Find Australia\'s Best Mobile Food Vendors',
+  metadataBase: new URL(SITE_URL),
+  title: 'Food Vans Near Me - Tasmania\'s food van map',
   description:
-    'Discover food trucks, coffee carts, and market stalls near you. Browse by cuisine, dietary requirements, and location across Australia.',
-  keywords: 'food vans, food trucks, coffee carts, street food, Australia, mobile food',
+    'Find food vans, coffee carts and market stalls trading near you in Tasmania. Search by suburb, see who\'s open now and find them at Hobart and Launceston markets.',
+  alternates: { canonical: '/' },
   openGraph: {
-    title: 'Food Vans Near Me',
-    description: 'Find Australia\'s best mobile food vendors near you.',
+    title: 'Food Vans Near Me - Tasmania\'s food van map',
+    description: 'Find food vans, coffee carts and market stalls trading near you in Tasmania.',
+    url: SITE_URL,
+    siteName: 'Food Vans Near Me',
     type: 'website',
     locale: 'en_AU',
   },
+  twitter: { card: 'summary_large_image' },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

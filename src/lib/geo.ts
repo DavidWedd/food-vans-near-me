@@ -5,6 +5,8 @@
  * otherwise falls back to the free OpenStreetMap tiles so the map never goes blank.
  */
 
+import { liveBounds } from '@/lib/regions';
+
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
 
 export const HOBART_CENTRE = { lat: -42.8821, lng: 147.3272 };
@@ -68,9 +70,13 @@ export async function geocodePlace(query: string, signal?: AbortSignal): Promise
   const q = query.trim();
   if (q.length < 3) return null;
 
+  // Only search inside the live area (Tasmania for now), so "Kingston"
+  // finds Kingston TAS rather than Kingston ACT.
+  const [[south, west], [north, east]] = liveBounds();
   const params = new URLSearchParams({
     q,
     country: 'au',
+    bbox: `${west},${south},${east},${north}`,
     types: 'postcode,place,locality,neighborhood',
     limit: '1',
     proximity: `${HOBART_CENTRE.lng},${HOBART_CENTRE.lat}`,

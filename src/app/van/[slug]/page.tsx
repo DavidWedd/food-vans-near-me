@@ -19,7 +19,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!vendor) return { title: 'Vendor not found' };
 
   return {
-    title: `${vendor.business_name} — Food Vans Near Me`,
+    title: `${vendor.business_name} - Food Vans Near Me`,
     description:
       vendor.description?.slice(0, 155) ??
       `${vendor.business_name} is a mobile food vendor based in ${vendor.suburb}, ${vendor.state}.`,

@@ -4,9 +4,9 @@ import { Footer } from '@/components/layout/Footer';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'List Your Food Van — Food Vans Near Me',
+  title: 'List Your Food Van - Food Vans Near Me',
   description:
-    'List your food truck, coffee cart or market stall on Food Vans Near Me. Reach thousands of hungry Australians looking for their next favourite food van.',
+    'List your food truck, coffee cart or market stall on Food Vans Near Me. Get found by hungry Tasmanians looking for their next favourite food van.',
 };
 
 const FEATURES = [
@@ -93,7 +93,7 @@ export default function JoinPage() {
             List Your Food Van
           </h1>
           <p className="text-[17px] max-w-2xl mx-auto mb-2" style={{ color: 'var(--muted)' }}>
-            Reach thousands of hungry Australians looking for their next favourite food van
+            Get found by hungry Tasmanians looking for their next favourite food van
           </p>
         </div>
 
@@ -317,61 +317,6 @@ export default function JoinPage() {
           </div>
         </section>
 
-        {/* Testimonials */}
-        <section
-          className="py-14 px-4"
-          style={{ backgroundColor: 'var(--surface-off)' }}
-          aria-label="Vendor testimonials"
-        >
-          <div className="max-w-4xl mx-auto">
-            <h2
-              className="text-[26px] font-bold text-center mb-10"
-              style={{ fontFamily: 'var(--font-display)', color: 'var(--text)' }}
-            >
-              What vendors say
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[
-                {
-                  quote:
-                    '"Since listing on Food Vans Near Me, our lunch takings have increased by 40%. Customers walk up and say they found us on the app!"',
-                  name: 'Mei L.',
-                  business: 'Dumpling Queen, Sydney',
-                },
-                {
-                  quote:
-                    '"The live location feature is a game-changer. I update it when I park and the customers just come. So simple and it actually works."',
-                  name: 'Brendan K.',
-                  business: 'Smoked & Stacked, Melbourne',
-                },
-                {
-                  quote:
-                    '"I was sceptical but after one weekend at the farmers market with the Pro listing, I\'d already made back the subscription cost ten times over."',
-                  name: 'Jasmine T.',
-                  business: 'Ceylon Bites, Brisbane',
-                },
-              ].map(({ quote, name, business }) => (
-                <blockquote
-                  key={name}
-                  className="rounded-2xl border p-5"
-                  style={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)' }}
-                >
-                  <p className="text-[14px] leading-relaxed mb-4 italic" style={{ color: 'var(--text)' }}>
-                    {quote}
-                  </p>
-                  <footer>
-                    <p className="font-semibold text-[14px]" style={{ color: 'var(--text)' }}>
-                      {name}
-                    </p>
-                    <p className="text-[12px]" style={{ color: 'var(--muted)' }}>
-                      {business}
-                    </p>
-                  </footer>
-                </blockquote>
-              ))}
-            </div>
-          </div>
-        </section>
 
         {/* FAQ */}
         <section className="py-14 px-4" aria-label="Frequently asked questions">

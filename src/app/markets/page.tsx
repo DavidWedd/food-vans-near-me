@@ -1,25 +1,15 @@
 'use client';
 
-import Image from 'next/image';
 import Link from 'next/link';
-import { useState } from 'react';
 import { ExternalLink, MapPin, Calendar } from 'lucide-react';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { SEED_MARKETS, SEED_VENDORS } from '@/lib/seed-data';
 import { Badge } from '@/components/ui/Badge';
-import type { AustralianState } from '@/types';
-
-const ALL_STATES: (AustralianState | 'ALL')[] = [
-  'ALL', 'NSW', 'VIC', 'QLD', 'WA', 'SA', 'TAS', 'ACT', 'NT',
-];
+import { MarketCover } from '@/components/ui/MarketCover';
 
 export default function MarketsPage() {
-  const [selectedState, setSelectedState] = useState<AustralianState | 'ALL'>('ALL');
-
-  const filtered = selectedState === 'ALL'
-    ? SEED_MARKETS
-    : SEED_MARKETS.filter((m) => m.state === selectedState);
+  const filtered = SEED_MARKETS;
 
   // Find vendors that attend each market based on schedule location name
   const getMarketVendors = (marketName: string) =>
@@ -48,42 +38,11 @@ export default function MarketsPage() {
               Markets &amp; Events
             </h1>
             <p className="text-[16px] max-w-2xl mx-auto" style={{ color: 'var(--muted)' }}>
-              Discover Australia&apos;s best food markets and where to find your favourite vans
+              Tasmania&apos;s best food markets, and where to find your favourite vans
             </p>
           </div>
         </div>
 
-        {/* State filter chips */}
-        <div
-          className="sticky top-[64px] z-30 border-b py-3 px-4 overflow-x-auto"
-          style={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)' }}
-        >
-          <div className="flex gap-2 max-w-7xl mx-auto">
-            {ALL_STATES.map((s) => (
-              <button
-                key={s}
-                onClick={() => setSelectedState(s)}
-                className="flex-shrink-0 rounded-full px-3.5 py-1.5 text-[13px] font-medium border transition-all min-h-[36px]"
-                style={
-                  selectedState === s
-                    ? {
-                        backgroundColor: 'var(--primary)',
-                        color: 'white',
-                        borderColor: 'var(--primary)',
-                      }
-                    : {
-                        backgroundColor: 'transparent',
-                        color: 'var(--text)',
-                        borderColor: 'var(--border)',
-                      }
-                }
-                aria-pressed={selectedState === s}
-              >
-                {s === 'ALL' ? 'All' : s}
-              </button>
-            ))}
-          </div>
-        </div>
 
         {/* Markets grid */}
         <div className="max-w-5xl mx-auto px-4 py-10">
@@ -91,7 +50,7 @@ export default function MarketsPage() {
             <div className="text-center py-20">
               <p className="text-5xl mb-4">🏪</p>
               <p className="text-[16px]" style={{ color: 'var(--muted)' }}>
-                No markets found in {selectedState}.
+                No markets listed yet.
               </p>
             </div>
           ) : (
@@ -109,16 +68,8 @@ export default function MarketsPage() {
                     }}
                   >
                     {/* Cover photo */}
-                    <div className="relative h-52 overflow-hidden">
-                      <Image
-                        src={market.cover_photo_url || ''}
-                        alt={market.name}
-                        fill
-                        className="object-cover"
-                        sizes="(max-width: 768px) 100vw, 50vw"
-                        loading="lazy"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+                    <div className="relative overflow-hidden">
+                      <MarketCover market={market} height="h-36" />
                       <div className="absolute bottom-3 left-3">
                         <Badge variant="frequency">{market.frequency}</Badge>
                       </div>
