@@ -6,6 +6,7 @@ import type { Market, Vendor } from '@/types';
 import { cuisineEmoji, isVendorLive } from '@/lib/utils';
 import { getTileConfig, HOBART_CENTRE, type SearchCentre } from '@/lib/geo';
 import { liveBounds } from '@/lib/regions';
+import { overlapTile, MARKET_PIN_SVG } from '@/lib/map-helpers';
 
 interface VendorMapProps {
   vendors: Vendor[];
@@ -96,7 +97,9 @@ export default function VendorMap({
       tileSize: tiles.tileSize,
       zoomOffset: tiles.zoomOffset,
       maxZoom: tiles.maxZoom,
-    }).addTo(map);
+    })
+      .on('tileload', overlapTile(tiles.tileSize))
+      .addTo(map);
 
     // Marker cluster group
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -152,7 +155,7 @@ export default function VendorMap({
     markets.forEach((m) => {
       const icon = L.divIcon({
         className: '',
-        html: `<div style="width:34px;height:34px;border-radius:10px;background:#01696F;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 2px 8px rgba(0,0,0,0.3);border:2px solid white;" aria-label="${m.name}">🏪</div>`,
+        html: `<div style="width:34px;height:34px;border-radius:10px;background:#01696F;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.3);border:2px solid white;" aria-label="${m.name}">${MARKET_PIN_SVG}</div>`,
         iconSize: [34, 34],
         iconAnchor: [17, 17],
         popupAnchor: [0, -20],
