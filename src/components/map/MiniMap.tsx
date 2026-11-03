@@ -2,17 +2,13 @@
 
 import { useEffect, useRef } from 'react';
 import type { Map as LeafletMap } from 'leaflet';
+import { getTileConfig } from '@/lib/geo';
 
 interface MiniMapProps {
   lat: number;
   lng: number;
   vendorName: string;
 }
-
-const CARTO_TILES =
-  'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
-const ATTRIBUTION =
-  '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>';
 
 export default function MiniMap({ lat, lng, vendorName }: MiniMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -37,10 +33,12 @@ export default function MiniMap({ lat, lng, vendorName }: MiniMapProps) {
       });
       mapRef.current = map;
 
-      L.tileLayer(CARTO_TILES, {
-        attribution: ATTRIBUTION,
-        subdomains: 'abcd',
-        maxZoom: 19,
+      const tiles = getTileConfig();
+      L.tileLayer(tiles.url, {
+        attribution: tiles.attribution,
+        tileSize: tiles.tileSize,
+        zoomOffset: tiles.zoomOffset,
+        maxZoom: tiles.maxZoom,
       }).addTo(map);
 
       const icon = L.divIcon({
