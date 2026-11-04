@@ -84,6 +84,10 @@ export default function TermsPage() {
           end of the period you&apos;ve paid for. There are no lock-in contracts.
         </li>
         <li>
+          Monthly fees aren&apos;t refunded for part months, except where the Australian Consumer Law requires
+          a refund.
+        </li>
+        <li>
           We may change our prices with at least 30 days&apos; notice by email. If you don&apos;t want to
           continue at the new price, you can cancel before it applies.
         </li>
