@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isPlanId } from '@/lib/plans';
-import { stripeInfoFor } from '@/lib/stripe-admin';
+import { syncVendorByEmail } from '@/lib/stripe-sync';
 
 export type AdminResult = { ok: true; message?: string } | { ok: false; error: string };
 
@@ -37,21 +37,27 @@ export async function approveWithStripe(id: string): Promise<AdminResult> {
   const supabase = await requireAdmin();
   const { data: v } = await supabase.from('vendors').select('slug, vendor_private(owner_email)').eq('id', id).single();
   const priv = v ? (Array.isArray(v.vendor_private) ? v.vendor_private[0] : v.vendor_private) : null;
-  const info = await stripeInfoFor(priv?.owner_email ?? null);
-  const patch: Record<string, unknown> = { status: 'approved' };
-  if (info?.plan) {
-    patch.subscription_tier = info.plan;
-    patch.founding = info.founding;
-  }
-  const { error } = await supabase.from('vendors').update(patch).eq('id', id);
+  const { error } = await supabase.from('vendors').update({ status: 'approved' }).eq('id', id);
   if (error) return { ok: false, error: 'That didn\'t save.' };
+  await syncVendorByEmail(priv?.owner_email);
+  const { data: after } = await supabase.from('vendors').select('subscription_tier, founding, plan_status').eq('id', id).single();
   refresh(v?.slug);
   return {
     ok: true,
-    message: info?.plan
-      ? `Approved on the ${info.plan} plan${info.founding ? ' (founding)' : ''}.`
+    message: after?.plan_status
+      ? `Approved on the ${after.subscription_tier} plan${after.founding ? ' (founding)' : ''}.`
       : 'Approved. No Stripe sign-up found for their email, so they\'re on Basic - set the plan by hand if needed.',
   };
+}
+
+/** Re-reads the vendor's plan from Stripe. */
+export async function syncFromStripe(id: string): Promise<AdminResult> {
+  const supabase = await requireAdmin();
+  const { data: v } = await supabase.from('vendors').select('slug, vendor_private(owner_email)').eq('id', id).single();
+  const priv = v ? (Array.isArray(v.vendor_private) ? v.vendor_private[0] : v.vendor_private) : null;
+  await syncVendorByEmail(priv?.owner_email);
+  refresh(v?.slug);
+  return { ok: true, message: 'Plan refreshed from Stripe.' };
 }
 
 export async function setPlan(id: string, tier: string, founding: boolean): Promise<AdminResult> {

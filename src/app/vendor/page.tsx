@@ -10,7 +10,7 @@ import { MenuEditor } from '@/components/dashboard/MenuEditor';
 import { ScheduleEditor } from '@/components/dashboard/ScheduleEditor';
 import { PLANS, hasFeature, isPlanId, planFor } from '@/lib/plans';
 import { getVendorStats } from '@/lib/vendor-stats';
-import { EnquiriesCard, LockedCard, StatsCard, type EnquiryRow } from '@/components/dashboard/ProCards';
+import { BillingCard, EnquiriesCard, LockedCard, StatsCard, type EnquiryRow } from '@/components/dashboard/ProCards';
 import { signOut } from './actions';
 
 export const metadata: Metadata = {
@@ -19,7 +19,12 @@ export const metadata: Metadata = {
 };
 export const dynamic = 'force-dynamic';
 
-export default async function VendorDashboardPage() {
+export default async function VendorDashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ billing?: string }>;
+}) {
+  const { billing } = await searchParams;
   if (!supabaseConfigured) redirect('/vendor/login');
   const supabase = await createClient();
   const { data: auth } = await supabase.auth.getUser();
@@ -165,6 +170,18 @@ export default async function VendorDashboardPage() {
                 Add a &quot;Book this van&quot; form to your page, so people can enquire about weddings, parties and events.
               </LockedCard>
             )}
+            <BillingCard
+              planName={plan?.name ?? 'Basic'}
+              founding={Boolean(v.founding)}
+              planStatus={v.plan_status ?? null}
+              notice={
+                billing === 'none'
+                  ? 'We couldn\'t find a Stripe sign-up for your login email. Choose a plan on the Join page using the same email, or email hello@foodvansnear.me.'
+                  : billing === 'unavailable'
+                    ? 'The billing page isn\'t available right now. Please try again shortly.'
+                    : null
+              }
+            />
             {!can('featuredPin') && (
               <LockedCard title="Featured pin" planName={planFor('featuredPin').name}>
                 A bigger, gold-ringed pin on the map, top spot in lists, and a chance to be Vendor of the Week on the homepage.
