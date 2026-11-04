@@ -32,7 +32,7 @@ const FAQS = [
   },
   {
     q: 'Can I update my location from my phone?',
-    a: 'Yes. Your vendor dashboard works on your phone: tap "I\'m here" and your pin appears on the map straight away. Vendor dashboards are opening to our founding vendors first.',
+    a: 'Yes. Your vendor dashboard works on your phone: tap "I\'m here" and your pin appears on the map straight away. It comes off by itself when your trading time is up.',
   },
   {
     q: 'What payment methods do customers use?',

@@ -82,6 +82,7 @@ export function Footer() {
                 { label: 'Find Vans', href: '/' },
                 { label: 'Markets & Events', href: '/markets' },
                 { label: 'List Your Van', href: '/join' },
+                { label: 'Vendor login', href: '/vendor' },
                 { label: 'About', href: '/about' },
                 { label: 'Contact', href: '/contact' },
               ].map(({ label, href }) => (

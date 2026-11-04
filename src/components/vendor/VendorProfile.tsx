@@ -96,14 +96,25 @@ export function VendorProfile({ vendor, similarVendors }: VendorProfileProps) {
 
       {/* Hero */}
       <div className="relative h-[300px] overflow-hidden">
-        <Image
-          src={vendor.cover_photo_url || `https://picsum.photos/seed/${vendor.slug}/800/400`}
-          alt={`${vendor.business_name} cover photo`}
-          fill
-          className="object-cover"
-          sizes="100vw"
-          priority
-        />
+        {vendor.cover_photo_url ? (
+          <Image
+            src={vendor.cover_photo_url}
+            alt={`${vendor.business_name} cover photo`}
+            fill
+            className="object-cover"
+            sizes="100vw"
+            priority
+          />
+        ) : (
+          <div
+            className="absolute inset-0"
+            aria-hidden="true"
+            style={{
+              background:
+                'linear-gradient(135deg, color-mix(in srgb, var(--primary) 30%, var(--surface)) 0%, color-mix(in srgb, var(--teal) 20%, var(--surface)) 100%)',
+            }}
+          />
+        )}
         {/* Gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
 
