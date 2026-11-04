@@ -79,7 +79,7 @@ export function VendorCard({ vendor, highlighted = false }: VendorCardProps) {
           {live ? (
             <Badge variant="open">
               <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse inline-block" />
-              Open Now
+              {vendor.location?.source === 'schedule' ? 'Usually here now' : 'Open Now'}
             </Badge>
           ) : (
             <Badge variant="closed" style={{ backgroundColor: 'rgba(0,0,0,0.55)', color: 'white' }}>

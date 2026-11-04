@@ -88,35 +88,59 @@ export default function HomeClient({ vendors, vendorOfWeekId }: { vendors: Vendo
     };
   }, [filters.searchQuery, filters.centre, vendors]);
 
-  const handleLocateMe = () => {
+  /**
+   * Finds the visitor and shows vans near them. `silent` is used when we locate a returning
+   * visitor automatically: no "finding you" message, and no error if it doesn't work.
+   */
+  const locate = useCallback((silent: boolean) => {
     if (!navigator.geolocation) {
-      setLocationMessage('Your browser can\'t share your location. Try typing your suburb or postcode instead.');
+      if (!silent) setLocationMessage('Your browser can\'t share your location. Try typing your suburb or postcode instead.');
       return;
     }
-    setLocationMessage('Finding your location…');
+    if (!silent) setLocationMessage('Finding your location…');
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const { latitude, longitude } = pos.coords;
         if (!isInLiveArea(latitude, longitude)) {
-          setLocationMessage(
-            `We're only in ${LIVE_AREA_NAME} for now - the rest of Australia is coming. Try searching for a suburb in ${LIVE_AREA_NAME}.`
-          );
+          if (!silent) {
+            setLocationMessage(
+              `We're only in ${LIVE_AREA_NAME} for now - the rest of Australia is coming. Try searching for a suburb in ${LIVE_AREA_NAME}.`
+            );
+          }
           return;
         }
         setLocationMessage(null);
         trackSearch(latitude, longitude, '', 'near_me');
-        handleFiltersChange({
-          ...filters,
-          searchQuery: '',
-          centre: { lat: pos.coords.latitude, lng: pos.coords.longitude, label: 'you' },
-        });
+        // Don't override a search the visitor has started typing in the meantime
+        setFilters((f) =>
+          silent && (f.centre || f.searchQuery.trim())
+            ? f
+            : { ...f, searchQuery: '', centre: { lat: latitude, lng: longitude, label: 'you' } }
+        );
       },
       () => {
-        setLocationMessage('We couldn\'t get your location. Try typing your suburb or postcode instead.');
+        if (!silent) setLocationMessage('We couldn\'t get your location. Try typing your suburb or postcode instead.');
       },
-      { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
+      { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 }
     );
-  };
+  }, []);
+
+  const handleLocateMe = () => locate(false);
+
+  // Returning visitors who've already allowed location: show vans near them straight away.
+  // First-time visitors aren't asked until they tap "Near me".
+  useEffect(() => {
+    let cancelled = false;
+    navigator.permissions
+      ?.query({ name: 'geolocation' as PermissionName })
+      .then((status) => {
+        if (!cancelled && status.state === 'granted') locate(true);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [locate]);
 
   const filtered = useMemo(() => filterVendors(vendors, filters), [vendors, filters]);
 

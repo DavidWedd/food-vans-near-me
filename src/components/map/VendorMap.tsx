@@ -43,7 +43,7 @@ function createPinHtml(vendor: Vendor, live: boolean): string {
 
 function createPopupHtml(vendor: Vendor, live: boolean): string {
   const statusBg = live ? '#437A22' : '#9CA3AF';
-  const statusLabel = live ? 'Open Now' : 'Closed';
+  const statusLabel = live ? (vendor.location?.source === 'schedule' ? 'Usually here now' : 'Open Now') : 'Closed';
   const distance = vendor.distance_km != null
     ? `<span style="color:var(--muted,#7A776F);font-size:12px;">${vendor.distance_km.toFixed(1)}km away</span>`
     : '';

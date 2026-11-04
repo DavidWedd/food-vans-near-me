@@ -32,7 +32,7 @@ export function toVendor(row: any): Vendor {
     suburb: row.suburb ?? '',
     is_active: row.status === 'approved',
     subscription_tier: row.subscription_tier ?? 'basic',
-    location: live
+    location: live && new Date(live.expires_at) > new Date()
       ? {
           lat: live.lat,
           lng: live.lng,
@@ -43,8 +43,11 @@ export function toVendor(row: any): Vendor {
           event_name: live.event_name ?? undefined,
           notes: live.notes ?? undefined,
           updated_at: live.started_at,
+          source: 'live' as const,
         }
-      : undefined,
+      : hasFeature(row.subscription_tier, 'schedule')
+        ? scheduledNow(row.vendor_schedule ?? [])
+        : undefined,
     // Weekly schedule is a Pro and Premium feature
     schedule: (hasFeature(row.subscription_tier, 'schedule') ? row.vendor_schedule ?? [] : [])
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -110,4 +113,60 @@ export async function getVendorOfWeekId(): Promise<string | null> {
   const { data } = await supabase.from('site_settings').select('value').eq('key', 'vendor_of_week').maybeSingle();
   const id = (data?.value as { vendor_id?: string } | null)?.vendor_id;
   return typeof id === 'string' ? id : null;
+}
+
+/** Current day of week (0 = Sunday) and minutes past midnight in Hobart. */
+function hobartNow(now = new Date()) {
+  const parts = new Intl.DateTimeFormat('en-AU', {
+    timeZone: 'Australia/Hobart',
+    weekday: 'short',
+    hour: 'numeric',
+    minute: 'numeric',
+    hour12: false,
+  }).formatToParts(now);
+  const get = (t: string) => parts.find((p) => p.type === t)?.value ?? '';
+  const day = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(get('weekday'));
+  return { day, minutes: (Number(get('hour')) % 24) * 60 + Number(get('minute')) };
+}
+
+const toMinutes = (t: string) => {
+  const [h, m] = String(t).split(':').map(Number);
+  return h * 60 + (m || 0);
+};
+
+/**
+ * If the van is inside one of its regular trading times right now, treat it as "usually here"
+ * at that spot until the slot ends. Used when the vendor hasn't tapped "I'm here".
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function scheduledNow(schedule: any[], now = new Date()): Vendor['location'] {
+  const { day, minutes } = hobartNow(now);
+  for (const s of schedule) {
+    if (s.lat == null || s.lng == null) continue;
+    const start = toMinutes(s.start_time);
+    const end = toMinutes(s.end_time);
+    let left: number | null = null;
+    if (end > start) {
+      if (s.day_of_week === day && minutes >= start && minutes < end) left = end - minutes;
+    } else {
+      // Runs past midnight, e.g. 6pm to 2am
+      if (s.day_of_week === day && minutes >= start) left = 24 * 60 - minutes + end;
+      if (s.day_of_week === (day + 6) % 7 && minutes < end) left = end - minutes;
+    }
+    if (left !== null && left > 0) {
+      return {
+        lat: s.lat,
+        lng: s.lng,
+        suburb: s.suburb ?? '',
+        state: 'TAS',
+        is_live: true,
+        expires_at: new Date(now.getTime() + left * 60_000).toISOString(),
+        event_name: s.location_name,
+        notes: `Regular trading time at ${s.location_name}. Times can change, so check their socials if you're making a special trip.`,
+        updated_at: now.toISOString(),
+        source: 'schedule',
+      };
+    }
+  }
+  return undefined;
 }
