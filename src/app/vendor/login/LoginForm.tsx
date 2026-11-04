@@ -24,7 +24,7 @@ export function LoginForm({ initialEmail, linkError, next }: { initialEmail: str
     const supabase = createBrowserSupabase();
     const { error } = await supabase.auth.signInWithOtp({
       email: email.trim(),
-      options: { emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}` },
+      options: { emailRedirectTo: `${window.location.origin}/auth/confirm?next=${encodeURIComponent(next)}` },
     });
     setBusy(false);
     if (error) {
