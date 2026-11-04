@@ -47,7 +47,7 @@ export function ScheduleEditor({ initial }: { initial: ScheduleInput[] }) {
   return (
     <Card
       title="Regular trading times"
-      intro="Where you usually trade each week, e.g. Salamanca Market on Saturdays. Customers see your next stop even when you're not live."
+      intro="Where you usually trade each week, e.g. Salamanca Market on Saturdays. During these times you'll show on the map as 'Usually here now' even if you forget to tap I'm here. Remove a time if you stop trading there."
     >
       {rows.length === 0 && (
         <p className="text-[14px] mb-4" style={{ color: 'var(--muted)' }}>

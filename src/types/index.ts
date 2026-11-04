@@ -17,6 +17,8 @@ export interface VendorLocation {
   event_name?: string;
   notes?: string;
   updated_at: string;
+  /** 'live' = vendor tapped "I'm here"; 'schedule' = inside one of their regular trading times. */
+  source?: 'live' | 'schedule';
 }
 
 export interface ScheduleEntry {

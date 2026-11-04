@@ -182,11 +182,11 @@ export function VendorProfile({ vendor, similarVendors, enquiriesEnabled = false
                   className="text-lg font-bold"
                   style={{ fontFamily: 'var(--font-display)', color: 'var(--success)' }}
                 >
-                  Open Now
+                  {vendor.location?.source === 'schedule' ? 'Usually here now' : 'Open Now'}
                 </span>
                 {expiresIn !== null && expiresIn < 9999 && (
                   <span className="text-[13px]" style={{ color: 'var(--muted)' }}>
-                    · Expires in {expiresIn}h
+                    {expiresIn < 1 ? '· Finishing soon' : `· For about ${expiresIn} more hour${expiresIn === 1 ? '' : 's'}`}
                   </span>
                 )}
               </div>
