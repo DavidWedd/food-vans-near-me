@@ -3,19 +3,21 @@ import type { Metadata } from 'next';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { VendorProfile } from '@/components/vendor/VendorProfile';
-import { SEED_VENDORS } from '@/lib/seed-data';
+import { getPublicVendorBySlug, getPublicVendors } from '@/lib/vendors';
+
+export const revalidate = 30;
 
 interface Props {
   params: Promise<{ slug: string }>;
 }
 
 export async function generateStaticParams() {
-  return SEED_VENDORS.map((v) => ({ slug: v.slug }));
+  return [];
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const vendor = SEED_VENDORS.find((v) => v.slug === slug);
+  const vendor = await getPublicVendorBySlug(slug);
   if (!vendor) return { title: 'Vendor not found' };
 
   return {
@@ -28,11 +30,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function VendorPage({ params }: Props) {
   const { slug } = await params;
-  const vendor = SEED_VENDORS.find((v) => v.slug === slug);
+  const vendor = await getPublicVendorBySlug(slug);
 
   if (!vendor) notFound();
 
-  const similar = SEED_VENDORS.filter(
+  const similar = (await getPublicVendors()).filter(
     (v) =>
       v.id !== vendor.id &&
       v.cuisine_type.some((c) => vendor.cuisine_type.includes(c))

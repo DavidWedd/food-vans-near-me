@@ -54,14 +54,25 @@ export function VendorCard({ vendor, highlighted = false }: VendorCardProps) {
     >
       {/* Cover photo */}
       <div className="relative aspect-video overflow-hidden">
-        <Image
-          src={vendor.cover_photo_url || `https://picsum.photos/seed/${vendor.slug}/800/400`}
-          alt={`${vendor.business_name} cover photo`}
-          fill
-          className="object-cover transition-transform duration-300 group-hover:scale-105"
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-          loading="lazy"
-        />
+        {vendor.cover_photo_url ? (
+          <Image
+            src={vendor.cover_photo_url}
+            alt={`${vendor.business_name} cover photo`}
+            fill
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            loading="lazy"
+          />
+        ) : (
+          <div
+            className="absolute inset-0"
+            aria-hidden="true"
+            style={{
+              background:
+                'linear-gradient(135deg, color-mix(in srgb, var(--primary) 30%, var(--surface)) 0%, color-mix(in srgb, var(--teal) 20%, var(--surface)) 100%)',
+            }}
+          />
+        )}
 
         {/* Status badge – top right */}
         <div className="absolute top-2 right-2">

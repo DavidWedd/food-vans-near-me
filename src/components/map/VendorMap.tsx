@@ -97,6 +97,7 @@ export default function VendorMap({
       tileSize: tiles.tileSize,
       zoomOffset: tiles.zoomOffset,
       maxZoom: tiles.maxZoom,
+      className: `fvnm-tiles-${tiles.tileSize}`,
     })
       .on('tileload', overlapTile(tiles.tileSize))
       .addTo(map);
@@ -137,13 +138,15 @@ export default function VendorMap({
       });
 
       // Pin hover effect
+      // Scale the round icon inside the marker, never the marker itself:
+      // Leaflet positions the marker with its own transform, so changing it makes the pin jump.
       marker.on('mouseover', () => {
-        const el = marker.getElement();
-        if (el) (el as HTMLElement).style.transform = 'scale(1.15)';
+        const inner = marker.getElement()?.firstElementChild as HTMLElement | null;
+        if (inner) inner.style.transform = 'scale(1.15)';
       });
       marker.on('mouseout', () => {
-        const el = marker.getElement();
-        if (el) (el as HTMLElement).style.transform = 'scale(1)';
+        const inner = marker.getElement()?.firstElementChild as HTMLElement | null;
+        if (inner) inner.style.transform = 'scale(1)';
       });
 
       clusterGroup.addLayer(marker);

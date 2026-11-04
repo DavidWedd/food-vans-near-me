@@ -1,10 +1,13 @@
 import type { MetadataRoute } from 'next';
-import { SEED_VENDORS } from '@/lib/seed-data';
+import { getPublicVendors } from '@/lib/vendors';
 
 const SITE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://foodvansnear.me';
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export const revalidate = 3600;
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
+  const vendors = await getPublicVendors();
   return [
     { url: `${SITE_URL}/`, lastModified: now, changeFrequency: 'daily', priority: 1 },
     { url: `${SITE_URL}/markets`, lastModified: now, changeFrequency: 'weekly', priority: 0.8 },
@@ -13,7 +16,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${SITE_URL}/contact`, lastModified: now, changeFrequency: 'yearly', priority: 0.4 },
     { url: `${SITE_URL}/terms`, lastModified: now, changeFrequency: 'yearly', priority: 0.2 },
     { url: `${SITE_URL}/privacy`, lastModified: now, changeFrequency: 'yearly', priority: 0.2 },
-    ...SEED_VENDORS.map((v) => ({
+    ...vendors.map((v) => ({
       url: `${SITE_URL}/van/${v.slug}`,
       lastModified: now,
       changeFrequency: 'daily' as const,

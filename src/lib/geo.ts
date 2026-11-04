@@ -96,3 +96,59 @@ export async function geocodePlace(query: string, signal?: AbortSignal): Promise
     return null;
   }
 }
+
+/**
+ * Finds a trading spot from an address or place plus suburb (e.g. "Salamanca Place, Hobart").
+ * Falls back to the suburb alone. Returns null if nothing in the live area matches.
+ */
+export async function geocodeSpot(spot: string, suburb: string): Promise<SearchCentre | null> {
+  if (!MAPBOX_TOKEN) return null;
+  const [[south, west], [north, east]] = liveBounds();
+  const tryQuery = async (q: string, types: string) => {
+    const params = new URLSearchParams({
+      q,
+      country: 'au',
+      bbox: `${west},${south},${east},${north}`,
+      types,
+      limit: '1',
+      proximity: `${HOBART_CENTRE.lng},${HOBART_CENTRE.lat}`,
+      access_token: MAPBOX_TOKEN,
+    });
+    try {
+      const res = await fetch(`https://api.mapbox.com/search/geocode/v6/forward?${params}`);
+      if (!res.ok) return null;
+      const f = (await res.json())?.features?.[0];
+      if (!f?.geometry?.coordinates) return null;
+      const [lng, lat] = f.geometry.coordinates as [number, number];
+      return { lat, lng, label: f.properties?.name_preferred || f.properties?.name || q };
+    } catch {
+      return null;
+    }
+  };
+  const full = [spot, suburb].filter(Boolean).join(', ');
+  return (
+    (full && (await tryQuery(full, 'address,street,neighborhood,locality,place,postcode'))) ||
+    (suburb && (await tryQuery(suburb, 'neighborhood,locality,place,postcode'))) ||
+    null
+  );
+}
+
+/** Suburb or town name for a point, for the "I'm here" pin. Empty string if unknown. */
+export async function reverseSuburb(lat: number, lng: number): Promise<string> {
+  if (!MAPBOX_TOKEN) return '';
+  const params = new URLSearchParams({
+    longitude: String(lng),
+    latitude: String(lat),
+    types: 'neighborhood,locality,place',
+    limit: '1',
+    access_token: MAPBOX_TOKEN,
+  });
+  try {
+    const res = await fetch(`https://api.mapbox.com/search/geocode/v6/reverse?${params}`);
+    if (!res.ok) return '';
+    const f = (await res.json())?.features?.[0];
+    return f?.properties?.name_preferred || f?.properties?.name || '';
+  } catch {
+    return '';
+  }
+}

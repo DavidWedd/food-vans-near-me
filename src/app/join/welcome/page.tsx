@@ -56,12 +56,21 @@ export default async function WelcomePage({
       <h2>What happens next</h2>
       <ol>
         <li>
-          We&apos;ll be in touch within one business day{signUp?.email ? ` at ${signUp.email}` : ''} to set up
-          your listing.
+          Set up your listing: add your logo, photos, menu and where you usually trade. It takes about 10
+          minutes. Log in with {signUp?.email ? <strong>{signUp.email}</strong> : 'the email you just used'}.
         </li>
-        <li>Send us your logo, a few photos, your menu and where you usually trade.</li>
-        <li>We&apos;ll put you on the map and let you know when you&apos;re live.</li>
+        <li>We&apos;ll check it and put you on the map, usually within a day.</li>
+        <li>When you start trading, tap &quot;I&apos;m here&quot; on your phone and your van appears on the map.</li>
       </ol>
+      <p>
+        <a
+          href={`/vendor/login${signUp?.email ? `?email=${encodeURIComponent(signUp.email)}` : ''}`}
+          className="inline-block rounded-full px-6 py-3 font-semibold text-white no-underline"
+          style={{ backgroundColor: 'var(--primary)' }}
+        >
+          Set up my listing
+        </a>
+      </p>
 
       <p>
         Questions? Email <a href={`mailto:${BUSINESS.email}`}>{BUSINESS.email}</a>.
