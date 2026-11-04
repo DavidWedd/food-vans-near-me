@@ -1,6 +1,6 @@
 import 'server-only';
 import Stripe from 'stripe';
-import { FOUNDING } from './plans';
+import { FOUNDING, type Plan } from './plans';
 
 let client: Stripe | null = null;
 
@@ -39,5 +39,37 @@ export async function foundingSpotsLeft(): Promise<number | null> {
   } catch (err) {
     console.error('Could not count founding spots', err);
     return null;
+  }
+}
+
+/**
+ * Finds the Stripe price for a plan by its lookup key. If it doesn't exist yet (e.g. a brand new
+ * live account), creates the product and monthly GST-inclusive price so no manual setup is needed.
+ */
+export async function getOrCreatePrice(stripe: Stripe, plan: Plan): Promise<Stripe.Price> {
+  const find = async () =>
+    (await stripe.prices.list({ lookup_keys: [plan.lookupKey], active: true, limit: 1 })).data[0];
+  const existing = await find();
+  if (existing) return existing;
+  try {
+    return await stripe.prices.create({
+      currency: 'aud',
+      unit_amount: plan.priceCents,
+      recurring: { interval: 'month' },
+      tax_behavior: 'inclusive',
+      lookup_key: plan.lookupKey,
+      nickname: `${plan.name} monthly`,
+      metadata: { plan: plan.id },
+      product_data: {
+        name: `${plan.name} listing`,
+        statement_descriptor: 'FOODVANSNEAR.ME',
+        metadata: { plan: plan.id },
+      },
+    });
+  } catch (err) {
+    // Another request may have created it at the same moment - use that one.
+    const again = await find();
+    if (again) return again;
+    throw err;
   }
 }

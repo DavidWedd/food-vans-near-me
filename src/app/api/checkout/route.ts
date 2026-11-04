@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import type Stripe from 'stripe';
 import { FOUNDING, PLANS, isPlanId } from '@/lib/plans';
-import { FOUNDING_METADATA, foundingSpotsLeft, getStripe } from '@/lib/stripe';
+import { FOUNDING_METADATA, foundingSpotsLeft, getOrCreatePrice, getStripe } from '@/lib/stripe';
 
 export const dynamic = 'force-dynamic';
 
@@ -23,12 +23,7 @@ export async function POST(request: NextRequest) {
   if (!stripe) return back('unavailable');
 
   try {
-    const prices = await stripe.prices.list({ lookup_keys: [plan.lookupKey], active: true, limit: 1 });
-    const price = prices.data[0];
-    if (!price) {
-      console.error(`No active Stripe price with lookup key ${plan.lookupKey}`);
-      return back('unavailable');
-    }
+    const price = await getOrCreatePrice(stripe, plan);
 
     // 10% GST, already included in the price. Shows GST on invoices without needing Stripe Tax.
     const gst = (await stripe.taxRates.list({ active: true, inclusive: true, limit: 100 })).data.find(
