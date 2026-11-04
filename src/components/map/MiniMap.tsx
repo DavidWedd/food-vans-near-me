@@ -40,6 +40,7 @@ export default function MiniMap({ lat, lng, vendorName }: MiniMapProps) {
         tileSize: tiles.tileSize,
         zoomOffset: tiles.zoomOffset,
         maxZoom: tiles.maxZoom,
+        className: `fvnm-tiles-${tiles.tileSize}`,
       })
         .on('tileload', overlapTile(tiles.tileSize))
         .addTo(map);
