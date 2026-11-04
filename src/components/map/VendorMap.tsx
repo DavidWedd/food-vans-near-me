@@ -25,14 +25,20 @@ const DEFAULT_ZOOM = 12;
 function createPinHtml(vendor: Vendor, live: boolean): string {
   const emoji = cuisineEmoji[vendor.cuisine_type[0]] || '🍽️';
   const bg = live ? 'var(--primary, #E07B00)' : '#9CA3AF';
+  // Premium vans get a bigger pin with a gold ring and a star
+  const featured = vendor.subscription_tier === 'premium';
+  const size = featured ? 50 : 40;
+  const ring = featured ? 'border:3px solid #F5B301;box-shadow:0 0 0 3px white,0 3px 12px rgba(0,0,0,0.35);' : 'border:2px solid white;box-shadow:0 2px 10px rgba(0,0,0,0.3);';
+  const star = featured
+    ? '<span style="position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;background:#F5B301;color:white;font-size:12px;display:flex;align-items:center;justify-content:center;border:2px solid white;">★</span>'
+    : '';
   return `<div style="
-    width:40px;height:40px;border-radius:50%;
+    position:relative;width:${size}px;height:${size}px;border-radius:50%;
     background:${bg};
     display:flex;align-items:center;justify-content:center;
-    font-size:18px;box-shadow:0 2px 10px rgba(0,0,0,0.3);
-    border:2px solid white;cursor:pointer;
+    font-size:${featured ? 22 : 18}px;${ring}cursor:pointer;
     transition:transform 0.15s ease;
-  " aria-label="${vendor.business_name}">${emoji}</div>`;
+  " aria-label="${vendor.business_name}${featured ? ' (featured)' : ''}">${emoji}${star}</div>`;
 }
 
 function createPopupHtml(vendor: Vendor, live: boolean): string {
@@ -116,15 +122,18 @@ export default function VendorMap({
       const lng = vendor.location?.lng ?? 0;
       if (!lat && !lng) return;
 
+      const featured = vendor.subscription_tier === 'premium';
+      const size = featured ? 50 : 40;
       const icon = L.divIcon({
         className: '',
         html: createPinHtml(vendor, live),
-        iconSize: [40, 40],
-        iconAnchor: [20, 20],
-        popupAnchor: [0, -22],
+        iconSize: [size, size],
+        iconAnchor: [size / 2, size / 2],
+        popupAnchor: [0, -(size / 2 + 2)],
       });
 
-      const marker = L.marker([lat, lng], { icon });
+      // Featured pins sit on top of other pins
+      const marker = L.marker([lat, lng], { icon, zIndexOffset: featured ? 1000 : 0 });
       marker.bindPopup(createPopupHtml(vendor, live), {
         closeButton: true,
         maxWidth: 260,

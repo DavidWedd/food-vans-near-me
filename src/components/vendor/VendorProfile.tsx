@@ -1,6 +1,9 @@
 'use client';
 
 import Image from 'next/image';
+import { useEffect } from 'react';
+import { trackVendor } from '@/lib/track';
+import { EnquiryForm } from './EnquiryForm';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import {
@@ -57,9 +60,14 @@ const paymentIcons: Record<string, React.ReactNode> = {
 interface VendorProfileProps {
   vendor: Vendor;
   similarVendors: Vendor[];
+  /** Show the "Book this van" form (Pro and Premium, when email is set up). */
+  enquiriesEnabled?: boolean;
 }
 
-export function VendorProfile({ vendor, similarVendors }: VendorProfileProps) {
+export function VendorProfile({ vendor, similarVendors, enquiriesEnabled = false }: VendorProfileProps) {
+  useEffect(() => {
+    trackVendor(vendor.id, 'profile_view');
+  }, [vendor.id]);
   const live = isVendorLive(vendor.location);
   const nextSchedule = getNextSchedule(vendor.schedule);
 
@@ -283,16 +291,50 @@ export function VendorProfile({ vendor, similarVendors }: VendorProfileProps) {
             <p className="text-[15px] leading-relaxed" style={{ color: 'var(--muted)' }}>
               {vendor.description}
             </p>
-            <div className="flex gap-4 mt-4">
+          </section>
+        )}
+
+        {/* Contact and bookings */}
+        {(vendor.phone || vendor.email || vendor.instagram_handle || vendor.facebook_url || vendor.website_url || enquiriesEnabled) && (
+          <section className="mb-8" aria-label="Contact">
+            <h2
+              className="text-xl font-bold mb-3"
+              style={{ fontFamily: 'var(--font-display)', color: 'var(--text)' }}
+            >
+              Contact
+            </h2>
+            <div className="flex flex-wrap gap-x-5 gap-y-2 mb-4 text-[14px] font-medium">
+              {vendor.phone && (
+                <a href={`tel:${vendor.phone.replace(/\s/g, '')}`} onClick={() => trackVendor(vendor.id, 'contact_click')} style={{ color: 'var(--primary)' }}>
+                  {vendor.phone}
+                </a>
+              )}
+              {vendor.email && (
+                <a href={`mailto:${vendor.email}`} onClick={() => trackVendor(vendor.id, 'contact_click')} style={{ color: 'var(--primary)' }}>
+                  {vendor.email}
+                </a>
+              )}
               {vendor.instagram_handle && (
                 <a
                   href={`https://instagram.com/${vendor.instagram_handle}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-[14px] font-medium"
+                  onClick={() => trackVendor(vendor.id, 'contact_click')}
+                  className="inline-flex items-center gap-1.5"
                   style={{ color: 'var(--primary)' }}
                 >
                   <Instagram size={16} />@{vendor.instagram_handle}
+                </a>
+              )}
+              {vendor.facebook_url && (
+                <a
+                  href={vendor.facebook_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => trackVendor(vendor.id, 'contact_click')}
+                  style={{ color: 'var(--primary)' }}
+                >
+                  Facebook
                 </a>
               )}
               {vendor.website_url && (
@@ -300,7 +342,8 @@ export function VendorProfile({ vendor, similarVendors }: VendorProfileProps) {
                   href={vendor.website_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-[14px] font-medium"
+                  onClick={() => trackVendor(vendor.id, 'website_click')}
+                  className="inline-flex items-center gap-1.5"
                   style={{ color: 'var(--teal)' }}
                 >
                   <Globe size={16} />
@@ -308,6 +351,7 @@ export function VendorProfile({ vendor, similarVendors }: VendorProfileProps) {
                 </a>
               )}
             </div>
+            {enquiriesEnabled && <EnquiryForm vendorId={vendor.id} vendorName={vendor.business_name} />}
           </section>
         )}
 

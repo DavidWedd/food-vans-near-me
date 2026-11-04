@@ -130,7 +130,13 @@ export function filterVendors(vendors: Vendor[], filters: FilterState): Vendor[]
       .sort((a, b) => (a.distance_km ?? 0) - (b.distance_km ?? 0));
   }
 
-  return vendors.filter((v) => passesFilters(v, filters));
+  // Featured (Premium) vans first, then trading-now vans, then the rest
+  const rank = (v: Vendor) => (v.subscription_tier === 'premium' ? 0 : 2) + (isVendorLive(v.location) ? 0 : 1);
+  return vendors
+    .filter((v) => passesFilters(v, filters))
+    .map((v, i) => ({ v, i }))
+    .sort((a, b) => rank(a.v) - rank(b.v) || a.i - b.i)
+    .map(({ v }) => v);
 }
 
 function passesFilters(v: Vendor, filters: FilterState): boolean {

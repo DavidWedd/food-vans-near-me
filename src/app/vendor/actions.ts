@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isInLiveArea } from '@/lib/regions';
+import { hasFeature } from '@/lib/plans';
 
 export type ActionResult = { ok: true; message?: string } | { ok: false; error: string };
 
@@ -20,8 +21,12 @@ async function requireUser() {
 
 async function myVendor() {
   const { supabase, user } = await requireUser();
-  const { data } = await supabase.from('vendors').select('id, slug').eq('owner_id', user.id).maybeSingle();
-  return { supabase, user, vendor: data as { id: string; slug: string } | null };
+  const { data } = await supabase
+    .from('vendors')
+    .select('id, slug, subscription_tier')
+    .eq('owner_id', user.id)
+    .maybeSingle();
+  return { supabase, user, vendor: data as { id: string; slug: string; subscription_tier: string } | null };
 }
 
 function refreshPublic(slug?: string) {
@@ -142,6 +147,8 @@ export async function goLive(input: {
     expires_at: new Date(now.getTime() + hours * 3600_000).toISOString(),
   });
   if (error) return { ok: false, error: 'Sorry, that didn\'t work. Please try again.' };
+  // Keep a history for the vendor's own stats
+  await supabase.from('live_sessions').insert({ vendor_id: vendor.id, hours, suburb: input.suburb.slice(0, 60) || null });
   refreshPublic(vendor.slug);
   return { ok: true, message: `You're on the map for the next ${hours} hours.` };
 }
@@ -204,6 +211,9 @@ export interface ScheduleInput {
 export async function saveSchedule(entries: ScheduleInput[]): Promise<ActionResult> {
   const { supabase, vendor } = await myVendor();
   if (!vendor) return { ok: false, error: 'Save your listing details first.' };
+  if (!hasFeature(vendor.subscription_tier, 'schedule')) {
+    return { ok: false, error: 'Regular trading times are part of the Pro plan.' };
+  }
   const time = /^\d{2}:\d{2}$/;
   const rows = entries
     .filter((e) => e.location_name.trim() && time.test(e.start_time) && time.test(e.end_time))

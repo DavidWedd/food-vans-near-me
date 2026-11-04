@@ -29,11 +29,24 @@ export default function PrivacyPage() {
       <ul>
         <li>
           <strong>Your location, only if you tap &quot;Near me&quot;</strong> and allow it in your browser.
-          It is used in your browser to show vans near you. We don&apos;t store it on our servers.
+          It is used in your browser to show vans near you. We don&apos;t store your exact location. We record
+          only the general area (rounded to about 1km) and the time of the search, with nothing that identifies
+          you, so vendors can see when and where people look for food vans.
         </li>
         <li>
           <strong>What you type into the search box.</strong> Suburb and postcode searches are sent to our map
-          provider, Mapbox, to find the place on the map.
+          provider, Mapbox, to find the place on the map. We keep the place name and its general area, without
+          anything that identifies you.
+        </li>
+        <li>
+          <strong>Anonymous counts of what&apos;s popular.</strong> When you view a van&apos;s page, tap its pin
+          or tap its contact links, we count it for that vendor&apos;s stats. These counts don&apos;t include who
+          you are.
+        </li>
+        <li>
+          <strong>Booking enquiries.</strong> If you use a van&apos;s &quot;Book this van&quot; form, we keep what
+          you enter (name, email, phone if given, event details and message) and send it to that vendor so they
+          can reply to you. The vendor then deals with you directly.
         </li>
         <li>
           <strong>Basic technical information</strong> that any website receives, such as your IP address,

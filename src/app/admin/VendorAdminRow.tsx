@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react';
 import Link from 'next/link';
 import type { StripeInfo } from '@/lib/stripe-admin';
-import { approveWithStripe, clearLive, saveNotes, setPlan, setStatus, type AdminResult } from './actions';
+import { approveWithStripe, clearLive, saveNotes, setPlan, setStatus, setVendorOfWeek, type AdminResult } from './actions';
 import { Notice, inputClass, inputStyle } from '@/components/dashboard/ui';
 
 export interface AdminVendor {
@@ -16,6 +16,7 @@ export interface AdminVendor {
   subscription_tier: string;
   founding: boolean;
   admin_notes: string;
+  vendor_of_week: boolean;
   created_at: string;
   live_until: string | null;
   live_suburb: string;
@@ -127,6 +128,16 @@ export function VendorAdminRow({ vendor: v }: { vendor: AdminVendor }) {
             style={{ borderColor: 'var(--border)', color: 'var(--text)' }}
           >
             Take off live map
+          </button>
+        )}
+        {v.status === 'approved' && v.subscription_tier === 'premium' && (
+          <button
+            disabled={pending}
+            onClick={() => run(() => setVendorOfWeek(v.vendor_of_week ? null : v.id))}
+            className="rounded-full px-5 py-2 text-[14px] font-semibold border disabled:opacity-60"
+            style={{ borderColor: '#F5B301', color: 'var(--text)', backgroundColor: v.vendor_of_week ? '#F5B30133' : 'transparent' }}
+          >
+            {v.vendor_of_week ? '★ Vendor of the Week (clear)' : '★ Make Vendor of the Week'}
           </button>
         )}
         {v.status === 'approved' && (

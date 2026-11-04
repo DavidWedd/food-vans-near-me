@@ -20,4 +20,4 @@ export const FOUNDING_SPOT_MAILTO = `mailto:${BUSINESS.email}?subject=${encodeUR
   'Hi,\n\nI\'d like to claim a founding vendor spot.\n\nBusiness name:\nWhat we sell:\nUsual trading spots and days:\nBest phone number:\nInstagram or Facebook (if any):\n\nThanks!'
 )}`;
 
-export const LEGAL_LAST_UPDATED = '3 November 2026';
+export const LEGAL_LAST_UPDATED = '5 November 2026';

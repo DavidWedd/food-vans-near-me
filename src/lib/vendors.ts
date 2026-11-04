@@ -1,5 +1,6 @@
 import 'server-only';
 import { createPublicClient } from '@/lib/supabase/public';
+import { hasFeature } from '@/lib/plans';
 import type { AustralianState, CuisineType, DietaryTag, PaymentMethod, Vendor } from '@/types';
 
 /** Columns and related rows we read for a vendor. */
@@ -26,6 +27,7 @@ export function toVendor(row: any): Vendor {
     email: row.email ?? undefined,
     website_url: row.website_url ?? undefined,
     instagram_handle: row.instagram_handle ?? undefined,
+    facebook_url: row.facebook_url ?? undefined,
     state: (row.state ?? 'TAS') as AustralianState,
     suburb: row.suburb ?? '',
     is_active: row.status === 'approved',
@@ -43,7 +45,8 @@ export function toVendor(row: any): Vendor {
           updated_at: live.started_at,
         }
       : undefined,
-    schedule: (row.vendor_schedule ?? [])
+    // Weekly schedule is a Pro and Premium feature
+    schedule: (hasFeature(row.subscription_tier, 'schedule') ? row.vendor_schedule ?? [] : [])
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .map((s: any) => ({
         day_of_week: s.day_of_week,
@@ -98,4 +101,13 @@ export async function getPublicVendorBySlug(slug: string): Promise<Vendor | null
     .eq('slug', slug)
     .maybeSingle();
   return data ? toVendor(data) : null;
+}
+
+/** The vendor the admin picked as Vendor of the Week, if any. */
+export async function getVendorOfWeekId(): Promise<string | null> {
+  const supabase = createPublicClient();
+  if (!supabase) return null;
+  const { data } = await supabase.from('site_settings').select('value').eq('key', 'vendor_of_week').maybeSingle();
+  const id = (data?.value as { vendor_id?: string } | null)?.vendor_id;
+  return typeof id === 'string' ? id : null;
 }
