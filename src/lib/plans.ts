@@ -33,3 +33,23 @@ export function isPlanId(value: unknown): value is PlanId {
 export function formatPrice(cents: number): string {
   return `$${(cents / 100).toFixed(cents % 100 === 0 ? 0 : 2)}`;
 }
+
+/** What each plan unlocks. Basic: live pin, profile and photos, menu. */
+export const PLAN_FEATURES = {
+  schedule: ['pro', 'premium'],
+  enquiries: ['pro', 'premium'],
+  analytics: ['pro', 'premium'],
+  featuredPin: ['premium'],
+  vendorOfWeek: ['premium'],
+} as const satisfies Record<string, readonly PlanId[]>;
+
+export type PlanFeature = keyof typeof PLAN_FEATURES;
+
+export function hasFeature(tier: string | undefined | null, feature: PlanFeature): boolean {
+  return (PLAN_FEATURES[feature] as readonly string[]).includes(tier ?? 'basic');
+}
+
+/** The cheapest plan that includes a feature, for "upgrade to ..." messages. */
+export function planFor(feature: PlanFeature): Plan {
+  return PLANS[PLAN_FEATURES[feature][0]];
+}

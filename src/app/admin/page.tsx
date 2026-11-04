@@ -24,9 +24,11 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   if (!adminRows || adminRows.length === 0) redirect('/vendor');
 
   const { show = 'pending' } = await searchParams;
+  const { data: vow } = await supabase.from('site_settings').select('value').eq('key', 'vendor_of_week').maybeSingle();
+  const vendorOfWeekId = (vow?.value as { vendor_id?: string | null } | null)?.vendor_id ?? null;
   const { data: all } = await supabase
     .from('vendors')
-    .select('*, vendor_live_locations(expires_at, suburb)')
+    .select('*, vendor_live_locations(expires_at, suburb), vendor_private(owner_email, admin_notes)')
     .order('created_at', { ascending: false });
 
   const vendors = all ?? [];
@@ -39,23 +41,25 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   const rows: AdminVendor[] = await Promise.all(
     shown.map(async (v) => {
       const live = Array.isArray(v.vendor_live_locations) ? v.vendor_live_locations[0] : v.vendor_live_locations;
+      const priv = Array.isArray(v.vendor_private) ? v.vendor_private[0] : v.vendor_private;
       return {
         id: v.id,
         slug: v.slug,
         business_name: v.business_name,
         suburb: v.suburb,
-        owner_email: v.owner_email,
+        owner_email: priv?.owner_email ?? null,
         status: v.status,
         subscription_tier: v.subscription_tier,
         founding: v.founding,
-        admin_notes: v.admin_notes ?? '',
+        admin_notes: priv?.admin_notes ?? '',
+        vendor_of_week: v.id === vendorOfWeekId,
         created_at: v.created_at,
         live_until: live && new Date(live.expires_at) > new Date() ? live.expires_at : null,
         live_suburb: live?.suburb ?? '',
         has_logo: Boolean(v.logo_url),
         has_cover: Boolean(v.cover_photo_url),
         has_description: Boolean(v.description),
-        stripe: await stripeInfoFor(v.owner_email),
+        stripe: await stripeInfoFor(priv?.owner_email ?? null),
       };
     })
   );

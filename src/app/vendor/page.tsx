@@ -8,7 +8,9 @@ import { ImHereCard } from '@/components/dashboard/ImHereCard';
 import { ListingForm, type ListingValues } from '@/components/dashboard/ListingForm';
 import { MenuEditor } from '@/components/dashboard/MenuEditor';
 import { ScheduleEditor } from '@/components/dashboard/ScheduleEditor';
-import { PLANS, isPlanId } from '@/lib/plans';
+import { PLANS, hasFeature, isPlanId, planFor } from '@/lib/plans';
+import { getVendorStats } from '@/lib/vendor-stats';
+import { EnquiriesCard, LockedCard, StatsCard, type EnquiryRow } from '@/components/dashboard/ProCards';
 import { signOut } from './actions';
 
 export const metadata: Metadata = {
@@ -54,6 +56,33 @@ export default async function VendorDashboardPage() {
   const live = liveRow && new Date(liveRow.expires_at) > new Date() ? liveRow : null;
   const tier: unknown = v?.subscription_tier;
   const plan = isPlanId(tier) ? PLANS[tier] : null;
+  const can = (f: Parameters<typeof hasFeature>[1]) => hasFeature(v?.subscription_tier, f);
+
+  // Pro extras: stats and enquiries
+  const spots = v
+    ? [
+        ...(v.vendor_schedule ?? []).filter((x: { lat: number | null }) => x.lat != null),
+        ...(liveRow ? [liveRow] : []),
+      ].map((x: { lat: number; lng: number }) => ({ lat: x.lat, lng: x.lng }))
+    : [];
+  if (v && spots.length === 0) {
+    const { data: lastSession } = await supabase
+      .from('vendor_live_locations')
+      .select('lat, lng')
+      .eq('vendor_id', v.id)
+      .maybeSingle();
+    if (lastSession) spots.push({ lat: lastSession.lat, lng: lastSession.lng });
+  }
+  const stats = v && can('analytics') ? await getVendorStats(supabase, v.id, spots) : null;
+  const { data: enquiryRows } =
+    v && can('enquiries')
+      ? await supabase
+          .from('enquiries')
+          .select('id, name, email, phone, event_date, event_location, guests, message, created_at')
+          .eq('vendor_id', v.id)
+          .order('created_at', { ascending: false })
+          .limit(20)
+      : { data: null };
 
   return (
     <>
@@ -102,6 +131,7 @@ export default async function VendorDashboardPage() {
                   is_available: m.is_available,
                 }))}
             />
+            {can('schedule') ? (
             <ScheduleEditor
               initial={[...(v.vendor_schedule ?? [])]
                 .sort((a, b) => a.day_of_week - b.day_of_week)
@@ -115,6 +145,31 @@ export default async function VendorDashboardPage() {
                   lng: s.lng,
                 }))}
             />
+            ) : (
+              <LockedCard title="Regular trading times" planName={planFor('schedule').name}>
+                Show customers where you trade each week, like Salamanca Market on Saturdays, so they can find you
+                even when you&apos;re not live.
+              </LockedCard>
+            )}
+            {stats ? (
+              <StatsCard stats={stats} />
+            ) : (
+              <LockedCard title="Your stats" planName={planFor('analytics').name}>
+                See how many people view your page and tap your pin, and when people search near your spots.
+              </LockedCard>
+            )}
+            {can('enquiries') ? (
+              <EnquiriesCard enquiries={(enquiryRows ?? []) as EnquiryRow[]} />
+            ) : (
+              <LockedCard title="Catering enquiries" planName={planFor('enquiries').name}>
+                Add a &quot;Book this van&quot; form to your page, so people can enquire about weddings, parties and events.
+              </LockedCard>
+            )}
+            {!can('featuredPin') && (
+              <LockedCard title="Featured pin" planName={planFor('featuredPin').name}>
+                A bigger, gold-ringed pin on the map, top spot in lists, and a chance to be Vendor of the Week on the homepage.
+              </LockedCard>
+            )}
           </>
         )}
 

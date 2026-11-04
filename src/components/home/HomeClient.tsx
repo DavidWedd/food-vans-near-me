@@ -11,6 +11,7 @@ import { VendorGrid } from '@/components/vendor/VendorGrid';
 import { SEED_MARKETS } from '@/lib/seed-data';
 import { filterVendors, matchesText } from '@/lib/utils';
 import { geocodePlace } from '@/lib/geo';
+import { trackSearch, trackVendor } from '@/lib/track';
 import { isInLiveArea, LIVE_AREA_NAME } from '@/lib/regions';
 import type { FilterState, Vendor } from '@/types';
 import { StarRating } from '@/components/vendor/StarRating';
@@ -44,9 +45,9 @@ const DEFAULT_FILTERS: FilterState = {
   centre: null,
 };
 
-export default function HomeClient({ vendors }: { vendors: Vendor[] }) {
-  // Premium vendors are eligible for Vendor of the Week
-  const VENDOR_OF_WEEK = vendors.find((v) => v.subscription_tier === 'premium');
+export default function HomeClient({ vendors, vendorOfWeekId }: { vendors: Vendor[]; vendorOfWeekId: string | null }) {
+  // Vendor of the Week is picked by the admin from Premium vendors
+  const VENDOR_OF_WEEK = vendors.find((v) => v.id === vendorOfWeekId && v.subscription_tier === 'premium');
   const HAS_VENDORS = vendors.length > 0;
   const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS);
   const [selectedVendorId, setSelectedVendorId] = useState<string | null>(null);
@@ -78,6 +79,7 @@ export default function HomeClient({ vendors }: { vendors: Vendor[] }) {
       const place = await geocodePlace(q, controller.signal);
       if (place) {
         setFilters((f) => (f.searchQuery.trim() === q ? { ...f, centre: place } : f));
+        trackSearch(place.lat, place.lng, place.label, 'place');
       }
     }, 400);
     return () => {
@@ -102,6 +104,7 @@ export default function HomeClient({ vendors }: { vendors: Vendor[] }) {
           return;
         }
         setLocationMessage(null);
+        trackSearch(latitude, longitude, '', 'near_me');
         handleFiltersChange({
           ...filters,
           searchQuery: '',
@@ -120,6 +123,7 @@ export default function HomeClient({ vendors }: { vendors: Vendor[] }) {
   // Stable callback so the map isn't rebuilt every time the page re-renders
   const handleVendorSelect = useCallback((vendor: Vendor) => {
     setSelectedVendorId(vendor.id);
+    trackVendor(vendor.id, 'map_click');
     const el = document.getElementById(`vendor-card-${vendor.id}`);
     el?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }, []);
@@ -252,13 +256,24 @@ export default function HomeClient({ vendors }: { vendors: Vendor[] }) {
                 <div className="flex flex-col md:flex-row">
                   {/* Image */}
                   <div className="relative md:w-1/2 h-56 md:h-auto min-h-[220px] flex-shrink-0">
-                    <Image
-                      src={VENDOR_OF_WEEK.cover_photo_url || ''}
-                      alt={`${VENDOR_OF_WEEK.business_name} — Vendor of the Week`}
-                      fill
-                      className="object-cover"
-                      sizes="(max-width: 768px) 100vw, 50vw"
-                    />
+                    {VENDOR_OF_WEEK.cover_photo_url ? (
+                      <Image
+                        src={VENDOR_OF_WEEK.cover_photo_url}
+                        alt={`${VENDOR_OF_WEEK.business_name} - Vendor of the Week`}
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 768px) 100vw, 50vw"
+                      />
+                    ) : (
+                      <div
+                        className="absolute inset-0"
+                        aria-hidden="true"
+                        style={{
+                          background:
+                            'linear-gradient(135deg, color-mix(in srgb, var(--primary) 30%, var(--surface)) 0%, color-mix(in srgb, var(--teal) 20%, var(--surface)) 100%)',
+                        }}
+                      />
+                    )}
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent to-black/10" />
                   </div>
 

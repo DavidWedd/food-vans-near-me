@@ -4,6 +4,8 @@ import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { VendorProfile } from '@/components/vendor/VendorProfile';
 import { getPublicVendorBySlug, getPublicVendors } from '@/lib/vendors';
+import { enquiriesConfigured } from '@/lib/supabase/admin';
+import { hasFeature } from '@/lib/plans';
 
 export const revalidate = 30;
 
@@ -44,7 +46,11 @@ export default async function VendorPage({ params }: Props) {
     <>
       <Header showSearch={false} />
       <main id="main-content">
-        <VendorProfile vendor={vendor} similarVendors={similar} />
+        <VendorProfile
+          vendor={vendor}
+          similarVendors={similar}
+          enquiriesEnabled={enquiriesConfigured() && hasFeature(vendor.subscription_tier, 'enquiries')}
+        />
       </main>
       <Footer />
     </>

@@ -35,8 +35,9 @@ export async function setStatus(id: string, status: 'approved' | 'hidden' | 'pen
 /** Approves a vendor and copies their plan from Stripe in one go. */
 export async function approveWithStripe(id: string): Promise<AdminResult> {
   const supabase = await requireAdmin();
-  const { data: v } = await supabase.from('vendors').select('owner_email, slug').eq('id', id).single();
-  const info = await stripeInfoFor(v?.owner_email ?? null);
+  const { data: v } = await supabase.from('vendors').select('slug, vendor_private(owner_email)').eq('id', id).single();
+  const priv = v ? (Array.isArray(v.vendor_private) ? v.vendor_private[0] : v.vendor_private) : null;
+  const info = await stripeInfoFor(priv?.owner_email ?? null);
   const patch: Record<string, unknown> = { status: 'approved' };
   if (info?.plan) {
     patch.subscription_tier = info.plan;
@@ -69,7 +70,9 @@ export async function setPlan(id: string, tier: string, founding: boolean): Prom
 
 export async function saveNotes(id: string, notes: string): Promise<AdminResult> {
   const supabase = await requireAdmin();
-  const { error } = await supabase.from('vendors').update({ admin_notes: notes.slice(0, 2000) || null }).eq('id', id);
+  const { error } = await supabase
+    .from('vendor_private')
+    .upsert({ vendor_id: id, admin_notes: notes.slice(0, 2000) || null }, { onConflict: 'vendor_id' });
   if (error) return { ok: false, error: 'That didn\'t save.' };
   revalidatePath('/admin');
   return { ok: true, message: 'Notes saved.' };
@@ -81,4 +84,21 @@ export async function clearLive(id: string): Promise<AdminResult> {
   if (error) return { ok: false, error: 'That didn\'t work.' };
   refresh();
   return { ok: true, message: 'Taken off the live map.' };
+}
+
+/** Picks (or clears) the Vendor of the Week shown on the homepage. Premium vendors only. */
+export async function setVendorOfWeek(id: string | null): Promise<AdminResult> {
+  const supabase = await requireAdmin();
+  if (id) {
+    const { data: v } = await supabase.from('vendors').select('status, subscription_tier').eq('id', id).single();
+    if (!v || v.status !== 'approved' || v.subscription_tier !== 'premium') {
+      return { ok: false, error: 'Only approved Premium vendors can be Vendor of the Week.' };
+    }
+  }
+  const { error } = await supabase
+    .from('site_settings')
+    .upsert({ key: 'vendor_of_week', value: { vendor_id: id }, updated_at: new Date().toISOString() });
+  if (error) return { ok: false, error: 'That didn\'t save.' };
+  refresh();
+  return { ok: true, message: id ? 'Now Vendor of the Week on the homepage.' : 'Vendor of the Week cleared.' };
 }

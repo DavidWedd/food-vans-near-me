@@ -80,6 +80,7 @@ export interface Vendor {
   email?: string;
   website_url?: string;
   instagram_handle?: string;
+  facebook_url?: string;
   state: AustralianState;
   suburb: string;
   is_active: boolean;
