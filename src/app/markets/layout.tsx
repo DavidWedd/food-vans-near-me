@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = {
   title: 'Markets & Events - Food Vans Near Me',
   description:
-    'Tasmanian food markets where you can find food vans: Salamanca Market, Farm Gate Market, Street Eats @ Franko, Hobart Twilight Market and Harvest Launceston.',
+    'Tasmanian markets where you can find food vans, from Salamanca and Farm Gate in Hobart to Harvest and World Street Eats in Launceston, Evandale and the Devonport Twilight Market.',
   alternates: { canonical: '/markets' },
 };
 
