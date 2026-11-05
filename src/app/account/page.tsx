@@ -6,13 +6,14 @@ import { Footer } from '@/components/layout/Footer';
 import { createClient, supabaseConfigured } from '@/lib/supabase/server';
 import { FavouriteRow } from '@/components/account/FavouriteRow';
 import { signOutCustomer } from './actions';
+import { ChangeEmailCard } from '@/components/account/ChangeEmailCard';
 
 export const metadata: Metadata = { title: 'Your saved vans - Food Vans Near Me', robots: { index: false } };
 export const dynamic = 'force-dynamic';
 
-export default async function AccountPage({ searchParams }: { searchParams: Promise<{ unsubscribed?: string }> }) {
+export default async function AccountPage({ searchParams }: { searchParams: Promise<{ unsubscribed?: string; email?: string }> }) {
   if (!supabaseConfigured) redirect('/');
-  const { unsubscribed } = await searchParams;
+  const { unsubscribed, email: emailStatus } = await searchParams;
   const supabase = await createClient();
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) redirect(`/account/login${unsubscribed ? '?next=/account' : ''}`);
@@ -114,6 +115,10 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
             })}
           </ul>
         )}
+
+        <div className="mt-10">
+          <ChangeEmailCard current={auth.user.email ?? ''} status={emailStatus} />
+        </div>
       </main>
       <Footer />
     </>
