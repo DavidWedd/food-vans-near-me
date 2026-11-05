@@ -52,7 +52,7 @@ export async function applySubscription(sub: Stripe.Subscription): Promise<'upda
       const { data } = await db
         .from('vendor_private')
         .select('vendor_id')
-        .ilike('owner_email', email)
+        .eq('owner_email', email.trim().toLowerCase())
         .limit(1)
         .maybeSingle();
       link = data;

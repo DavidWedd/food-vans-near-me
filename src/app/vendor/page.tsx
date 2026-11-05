@@ -14,6 +14,8 @@ import { getVendorStats } from '@/lib/vendor-stats';
 import { BillingCard, EnquiriesCard, LockedCard, StatsCard, type EnquiryRow } from '@/components/dashboard/ProCards';
 import { signOut } from './actions';
 import { claimListingFor } from '@/lib/claim';
+import { syncLoginEmail } from '@/lib/login-email';
+import { ChangeEmailCard } from '@/components/account/ChangeEmailCard';
 
 export const metadata: Metadata = {
   title: 'Your dashboard - Food Vans Near Me',
@@ -24,9 +26,9 @@ export const dynamic = 'force-dynamic';
 export default async function VendorDashboardPage({
   searchParams,
 }: {
-  searchParams: Promise<{ billing?: string }>;
+  searchParams: Promise<{ billing?: string; email?: string }>;
 }) {
-  const { billing } = await searchParams;
+  const { billing, email: emailStatus } = await searchParams;
   if (!supabaseConfigured) redirect('/vendor/login');
   const supabase = await createClient();
   const { data: auth } = await supabase.auth.getUser();
@@ -44,6 +46,8 @@ export default async function VendorDashboardPage({
   if (!v && (await claimListingFor(user.id, user.email))) {
     ({ data: v } = await loadMine());
   }
+  // Keeps the van and Stripe in step if the login email was changed
+  if (v) await syncLoginEmail(user.id, user.email);
 
   const { data: adminRows } = await supabase.from('admin_emails').select('email').limit(1);
   const isAdmin = Boolean(adminRows && adminRows.length);
@@ -207,6 +211,8 @@ export default async function VendorDashboardPage({
             )}
           </>
         )}
+
+        <ChangeEmailCard current={user.email ?? ''} status={emailStatus} />
 
         <p className="text-[14px]" style={{ color: 'var(--muted)' }}>
           Need a hand? Email <a href="mailto:hello@foodvansnear.me" className="underline">hello@foodvansnear.me</a>.
