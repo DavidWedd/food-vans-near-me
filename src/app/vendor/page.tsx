@@ -13,6 +13,7 @@ import { PLANS, hasFeature, isPlanId, planFor } from '@/lib/plans';
 import { getVendorStats } from '@/lib/vendor-stats';
 import { BillingCard, EnquiriesCard, LockedCard, StatsCard, type EnquiryRow } from '@/components/dashboard/ProCards';
 import { signOut } from './actions';
+import { claimListingFor } from '@/lib/claim';
 
 export const metadata: Metadata = {
   title: 'Your dashboard - Food Vans Near Me',
@@ -32,11 +33,17 @@ export default async function VendorDashboardPage({
   if (!auth.user) redirect('/vendor/login');
   const user = auth.user;
 
-  const { data: v } = await supabase
-    .from('vendors')
-    .select('*, vendor_live_locations(*), vendor_schedule(*), menu_items(*)')
-    .eq('owner_id', user.id)
-    .maybeSingle();
+  const loadMine = () =>
+    supabase
+      .from('vendors')
+      .select('*, vendor_live_locations(*), vendor_schedule(*), menu_items(*)')
+      .eq('owner_id', user.id)
+      .maybeSingle();
+  let { data: v } = await loadMine();
+  // A van the admin added for this email? Hand it over now.
+  if (!v && (await claimListingFor(user.id, user.email))) {
+    ({ data: v } = await loadMine());
+  }
 
   const { data: adminRows } = await supabase.from('admin_emails').select('email').limit(1);
   const isAdmin = Boolean(adminRows && adminRows.length);

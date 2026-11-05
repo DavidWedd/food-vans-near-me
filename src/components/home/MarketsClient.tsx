@@ -82,7 +82,9 @@ export default function MarketsClient({ vendors }: { vendors: Vendor[] }) {
                         className="text-[20px] font-bold mb-1 leading-snug"
                         style={{ fontFamily: 'var(--font-display)', color: 'var(--text)' }}
                       >
-                        {market.name}
+                        <Link href={`/markets/${market.slug}`} className="hover:underline">
+                          {market.name}
+                        </Link>
                       </h2>
 
                       {/* Location */}
@@ -142,6 +144,13 @@ export default function MarketsClient({ vendors }: { vendors: Vendor[] }) {
                         </div>
                       )}
 
+                      <Link
+                        href={`/markets/${market.slug}`}
+                        className="inline-flex items-center gap-1.5 text-[14px] font-semibold mr-5"
+                        style={{ color: 'var(--teal)' }}
+                      >
+                        See who&apos;s trading
+                      </Link>
                       {/* Visit website */}
                       {market.website_url && (
                         <a

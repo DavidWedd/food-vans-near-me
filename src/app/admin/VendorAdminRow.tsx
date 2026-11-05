@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react';
 import Link from 'next/link';
 import type { StripeInfo } from '@/lib/stripe-admin';
-import { approveWithStripe, clearLive, saveNotes, setPlan, setStatus, setVendorOfWeek, syncFromStripe, type AdminResult } from './actions';
+import { approveWithStripe, clearLive, saveNotes, setOwnerEmail, setPlan, setStatus, setVendorOfWeek, syncFromStripe, type AdminResult } from './actions';
 import { Notice, inputClass, inputStyle } from '@/components/dashboard/ui';
 
 export interface AdminVendor {
@@ -12,6 +12,8 @@ export interface AdminVendor {
   business_name: string;
   suburb: string;
   owner_email: string | null;
+  /** True once someone has logged in and owns this listing. */
+  claimed: boolean;
   status: 'pending' | 'approved' | 'hidden';
   subscription_tier: string;
   founding: boolean;
@@ -36,6 +38,7 @@ export function VendorAdminRow({ vendor: v }: { vendor: AdminVendor }) {
   const [tier, setTier] = useState(v.subscription_tier);
   const [founding, setFounding] = useState(v.founding);
   const [notes, setNotes] = useState(v.admin_notes);
+  const [handover, setHandover] = useState(v.owner_email ?? '');
   const run = (fn: () => Promise<AdminResult>) => start(async () => setResult(await fn()));
 
   const missing = [
@@ -53,7 +56,7 @@ export function VendorAdminRow({ vendor: v }: { vendor: AdminVendor }) {
             {v.suburb && <span className="font-normal" style={{ color: 'var(--muted)' }}> · {v.suburb}</span>}
           </h2>
           <p className="text-[13px]" style={{ color: 'var(--muted)' }}>
-            {v.owner_email ?? 'No login linked'} · joined {fmt(v.created_at)}
+            {v.claimed ? v.owner_email ?? 'Linked to a login' : v.owner_email ? `Waiting for ${v.owner_email} to log in` : 'Added by admin, no owner yet'} · joined {fmt(v.created_at)}
           </p>
           {v.live_until && (
             <p className="text-[13px] font-semibold mt-1" style={{ color: 'var(--success)' }}>
@@ -185,6 +188,26 @@ export function VendorAdminRow({ vendor: v }: { vendor: AdminVendor }) {
             Save plan
           </button>
         </div>
+        {!v.claimed && (
+          <div className="mt-3 flex flex-wrap gap-2 items-center">
+            <input
+              type="email"
+              value={handover}
+              onChange={(e) => setHandover(e.target.value)}
+              placeholder="Owner's email - they take over when they log in"
+              className={inputClass}
+              style={{ ...inputStyle, maxWidth: 360 }}
+            />
+            <button
+              disabled={pending}
+              onClick={() => run(() => setOwnerEmail(v.id, handover))}
+              className="rounded-full px-5 py-2 text-[14px] font-semibold border disabled:opacity-60"
+              style={{ borderColor: 'var(--border)', color: 'var(--text)' }}
+            >
+              Save hand-over email
+            </button>
+          </div>
+        )}
         <textarea
           value={notes}
           onChange={(e) => setNotes(e.target.value)}

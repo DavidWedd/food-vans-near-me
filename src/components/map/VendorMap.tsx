@@ -22,6 +22,10 @@ interface VendorMapProps {
 const DEFAULT_CENTER: [number, number] = [HOBART_CENTRE.lat, HOBART_CENTRE.lng];
 const DEFAULT_ZOOM = 12;
 
+/** Vendor-typed text goes into Leaflet HTML, so escape it. */
+const esc = (v: string | null | undefined) =>
+  String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
+
 function createPinHtml(vendor: Vendor, live: boolean): string {
   const emoji = cuisineEmoji[vendor.cuisine_type[0]] || '🍽️';
   const bg = live ? 'var(--primary, #E07B00)' : '#9CA3AF';
@@ -38,7 +42,7 @@ function createPinHtml(vendor: Vendor, live: boolean): string {
     display:flex;align-items:center;justify-content:center;
     font-size:${featured ? 22 : 18}px;${ring}cursor:pointer;
     transition:transform 0.15s ease;
-  " aria-label="${vendor.business_name}${featured ? ' (featured)' : ''}">${emoji}${star}</div>`;
+  " aria-label="${esc(vendor.business_name)}${featured ? ' (featured)' : ''}">${emoji}${star}</div>`;
 }
 
 function createPopupHtml(vendor: Vendor, live: boolean): string {
@@ -50,10 +54,12 @@ function createPopupHtml(vendor: Vendor, live: boolean): string {
 
   return `<div style="font-family:Satoshi,ui-sans-serif,sans-serif;padding:14px;min-width:190px;max-width:240px;">
   <p style="font-weight:700;font-size:15px;color:var(--text,#2A2520);margin:0 0 4px;">
-    ${vendor.business_name}
+    ${esc(vendor.business_name)}
   </p>
   <p style="font-size:12px;color:var(--muted,#7A776F);margin:0 0 8px;">
-    ${vendor.suburb}, ${vendor.state}
+    ${live && vendor.location?.source === 'live' && vendor.location.event_name
+      ? `${esc(vendor.location.event_name)}, ${esc(vendor.location.suburb || vendor.suburb)}`
+      : `${esc(vendor.suburb)}, ${esc(vendor.state)}`}
   </p>
   <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
     <span style="background:${statusBg};color:white;font-size:11px;padding:2px 8px;border-radius:999px;font-weight:700;">
@@ -61,7 +67,7 @@ function createPopupHtml(vendor: Vendor, live: boolean): string {
     </span>
     ${distance}
   </div>
-  <a href="/van/${vendor.slug}"
+  <a href="/van/${encodeURIComponent(vendor.slug)}"
      style="display:inline-block;color:var(--primary,#E07B00);font-size:13px;font-weight:700;text-decoration:none;">
     View Profile →
   </a>
@@ -167,7 +173,7 @@ export default function VendorMap({
     markets.forEach((m) => {
       const icon = L.divIcon({
         className: '',
-        html: `<div style="width:34px;height:34px;border-radius:10px;background:#01696F;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.3);border:2px solid white;" aria-label="${m.name}">${MARKET_PIN_SVG}</div>`,
+        html: `<div style="width:34px;height:34px;border-radius:10px;background:#01696F;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.3);border:2px solid white;" aria-label="${esc(m.name)}">${MARKET_PIN_SVG}</div>`,
         iconSize: [34, 34],
         iconAnchor: [17, 17],
         popupAnchor: [0, -20],
@@ -175,9 +181,9 @@ export default function VendorMap({
       L.marker([m.lat, m.lng], { icon })
         .bindPopup(
           `<div style="font-family:Satoshi,ui-sans-serif,sans-serif;padding:12px;min-width:180px;max-width:240px;">
-            <p style="font-weight:700;font-size:15px;color:#2A2520;margin:0 0 4px;">${m.name}</p>
-            <p style="font-size:12px;color:#7A776F;margin:0 0 8px;">${m.day_of_week ?? ''}</p>
-            <a href="/markets#${m.slug}" style="color:#E07B00;font-size:13px;font-weight:700;text-decoration:none;">Market details →</a>
+            <p style="font-weight:700;font-size:15px;color:#2A2520;margin:0 0 4px;">${esc(m.name)}</p>
+            <p style="font-size:12px;color:#7A776F;margin:0 0 8px;">${esc(m.day_of_week)}</p>
+            <a href="/markets/${encodeURIComponent(m.slug)}" style="color:#E07B00;font-size:13px;font-weight:700;text-decoration:none;">Market details →</a>
           </div>`,
           { maxWidth: 260 }
         )

@@ -6,6 +6,7 @@ import { trackVendor } from '@/lib/track';
 import { EnquiryForm } from './EnquiryForm';
 import { SaveButton } from '@/components/account/SaveButton';
 import { ReviewForm } from '@/components/account/ReviewForm';
+import { ReportListing } from './ReportListing';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import {
@@ -191,6 +192,12 @@ export function VendorProfile({ vendor, similarVendors, enquiriesEnabled = false
                   </span>
                 )}
               </div>
+              {vendor.location?.source === 'live' && (vendor.location.event_name || vendor.location.suburb) && (
+                <p className="text-[15px] font-semibold mb-2" style={{ color: 'var(--text)' }}>
+                  <MapPin size={15} className="inline mr-1 -mt-0.5" />
+                  {[vendor.location.event_name, vendor.location.suburb].filter(Boolean).join(', ')}
+                </p>
+              )}
               {vendor.location?.notes && (
                 <p className="text-[14px] mb-4" style={{ color: 'var(--muted)' }}>
                   <MapPin size={14} className="inline mr-1" />
@@ -583,6 +590,10 @@ export function VendorProfile({ vendor, similarVendors, enquiriesEnabled = false
             </div>
           </section>
         )}
+
+        <div className="mt-10">
+          <ReportListing vendorId={vendor.id} />
+        </div>
       </div>
     </div>
   );

@@ -49,10 +49,14 @@ export default function PrivacyPage() {
           can reply to you. The vendor then deals with you directly.
         </li>
         <li>
+          <strong>Listing reports.</strong> If you tell us something is wrong with a listing, we keep what you
+          wrote and your email if you give it, so we can check and reply.
+        </li>
+        <li>
           <strong>Basic technical information</strong> that any website receives, such as your IP address,
           browser type and the pages you visit. Our hosting provider keeps this in server logs for security
-          and to keep the site running. If we add visitor statistics, we&apos;ll use a privacy-friendly
-          service that doesn&apos;t use advertising cookies.
+          and to keep the site running. We count visits with Vercel Web Analytics, which doesn&apos;t use
+          cookies and doesn&apos;t identify you.
         </li>
       </ul>
       <p>
@@ -118,9 +122,8 @@ export default function PrivacyPage() {
 
       <h2>Cookies and local storage</h2>
       <p>
-        The site saves your light or dark mode choice in your browser&apos;s local storage. Once vendor
-        accounts are available, we&apos;ll use essential cookies to keep vendors logged in. We don&apos;t use
-        advertising or tracking cookies.
+        The site saves your light or dark mode choice in your browser&apos;s local storage. We use essential
+        cookies to keep you logged in if you have an account. We don&apos;t use advertising or tracking cookies.
       </p>
 
       <h2>Keeping it secure</h2>

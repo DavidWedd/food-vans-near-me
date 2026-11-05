@@ -365,7 +365,7 @@ export default function HomeClient({ vendors, vendorOfWeekId }: { vendors: Vendo
               {SEED_MARKETS.map((market) => (
                 <Link
                   key={market.id}
-                  href={`/markets#${market.slug}`}
+                  href={`/markets/${market.slug}`}
                   className="flex-shrink-0 w-[300px] rounded-2xl border overflow-hidden group transition-all duration-200"
                   style={{
                     backgroundColor: 'var(--surface)',
