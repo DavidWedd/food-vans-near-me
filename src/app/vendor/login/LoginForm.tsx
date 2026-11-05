@@ -7,7 +7,17 @@ import { createBrowserSupabase } from '@/lib/supabase/browser';
 const inputClass = 'w-full rounded-xl border px-4 py-3 text-[16px]';
 const inputStyle = { borderColor: 'var(--border)', backgroundColor: 'var(--surface)', color: 'var(--text)' };
 
-export function LoginForm({ initialEmail, linkError, next }: { initialEmail: string; linkError: boolean; next: string }) {
+export function LoginForm({
+  initialEmail,
+  linkError,
+  next,
+  hint = 'Use the same email you signed up with. No password needed - we\'ll email you a login link.',
+}: {
+  initialEmail: string;
+  linkError: boolean;
+  next: string;
+  hint?: string;
+}) {
   const router = useRouter();
   const [email, setEmail] = useState(initialEmail);
   const [code, setCode] = useState('');
@@ -117,7 +127,7 @@ export function LoginForm({ initialEmail, linkError, next }: { initialEmail: str
         required
       />
       <p className="text-[13px]" style={{ color: 'var(--muted)' }}>
-        Use the same email you signed up with. No password needed - we&apos;ll email you a login link.
+        {hint}
       </p>
       {message && <p role="alert" className="text-[14px]" style={{ color: 'var(--error, #b42318)' }}>{message}</p>}
       <button

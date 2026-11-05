@@ -7,6 +7,7 @@ import { createClient, supabaseConfigured } from '@/lib/supabase/server';
 import { ImHereCard } from '@/components/dashboard/ImHereCard';
 import { ListingForm, type ListingValues } from '@/components/dashboard/ListingForm';
 import { MenuEditor } from '@/components/dashboard/MenuEditor';
+import { ReviewsCard, type DashboardReview } from '@/components/dashboard/ReviewsCard';
 import { ScheduleEditor } from '@/components/dashboard/ScheduleEditor';
 import { PLANS, hasFeature, isPlanId, planFor } from '@/lib/plans';
 import { getVendorStats } from '@/lib/vendor-stats';
@@ -78,6 +79,15 @@ export default async function VendorDashboardPage({
       .maybeSingle();
     if (lastSession) spots.push({ lat: lastSession.lat, lng: lastSession.lng });
   }
+  const { data: myReviews } = v
+    ? await supabase
+        .from('reviews')
+        .select('id, display_name, rating, comment, vendor_reply, created_at')
+        .eq('vendor_id', v.id)
+        .eq('hidden', false)
+        .order('created_at', { ascending: false })
+        .limit(50)
+    : { data: null };
   const stats = v && can('analytics') ? await getVendorStats(supabase, v.id, spots) : null;
   const { data: enquiryRows } =
     v && can('enquiries')
@@ -163,6 +173,7 @@ export default async function VendorDashboardPage({
                 See how many people view your page and tap your pin, and when people search near your spots.
               </LockedCard>
             )}
+            <ReviewsCard reviews={(myReviews ?? []) as DashboardReview[]} />
             {can('enquiries') ? (
               <EnquiriesCard enquiries={(enquiryRows ?? []) as EnquiryRow[]} />
             ) : (

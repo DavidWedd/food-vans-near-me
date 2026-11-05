@@ -195,6 +195,15 @@ export function Header({
               Markets
             </Link>
             <Link
+              href="/account"
+              className="text-[14px] font-medium transition-colors"
+              style={{ color: 'var(--text)' }}
+              onMouseEnter={(e) => ((e.target as HTMLElement).style.color = 'var(--primary)')}
+              onMouseLeave={(e) => ((e.target as HTMLElement).style.color = 'var(--text)')}
+            >
+              Saved
+            </Link>
+            <Link
               href="/vendor"
               className="text-[14px] font-medium transition-colors"
               style={{ color: 'var(--text)' }}
@@ -292,6 +301,14 @@ export function Header({
               style={{ color: 'var(--text)' }}
             >
               List Your Van
+            </Link>
+            <Link
+              href="/account"
+              onClick={() => setMobileOpen(false)}
+              className="text-[16px] font-medium py-2"
+              style={{ color: 'var(--text)' }}
+            >
+              Saved vans
             </Link>
             <Link
               href="/vendor"

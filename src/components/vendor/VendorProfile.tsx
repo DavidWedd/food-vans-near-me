@@ -4,6 +4,8 @@ import Image from 'next/image';
 import { useEffect } from 'react';
 import { trackVendor } from '@/lib/track';
 import { EnquiryForm } from './EnquiryForm';
+import { SaveButton } from '@/components/account/SaveButton';
+import { ReviewForm } from '@/components/account/ReviewForm';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import {
@@ -279,6 +281,10 @@ export function VendorProfile({ vendor, similarVendors, enquiriesEnabled = false
           </div>
         </section>
 
+        <div className="mb-8">
+          <SaveButton vendorId={vendor.id} slug={vendor.slug} />
+        </div>
+
         {/* About */}
         {vendor.description && (
           <section className="mb-8" aria-label="About">
@@ -466,8 +472,8 @@ export function VendorProfile({ vendor, similarVendors, enquiriesEnabled = false
         )}
 
         {/* Reviews */}
-        {vendor.reviews && vendor.reviews.length > 0 && (
-          <section className="mb-8" aria-label="Customer reviews">
+        {(
+          <section id="reviews" className="mb-8 scroll-mt-20" aria-label="Customer reviews">
             <div className="flex items-center justify-between mb-4">
               <h2
                 className="text-xl font-bold"
@@ -475,17 +481,25 @@ export function VendorProfile({ vendor, similarVendors, enquiriesEnabled = false
               >
                 Reviews
               </h2>
-              {vendor.avg_rating !== undefined && (
+              {vendor.avg_rating !== undefined && vendor.review_count ? (
                 <StarRating
                   rating={vendor.avg_rating}
                   reviewCount={vendor.review_count}
                   size={16}
                 />
-              )}
+              ) : null}
             </div>
 
+            <div className="mb-5">
+              <ReviewForm vendorId={vendor.id} slug={vendor.slug} />
+            </div>
+            {(!vendor.reviews || vendor.reviews.length === 0) && (
+              <p className="text-[14px]" style={{ color: 'var(--muted)' }}>
+                No reviews yet. Tried them? Be the first to say how it was.
+              </p>
+            )}
             <div className="space-y-4">
-              {vendor.reviews.map((review) => (
+              {(vendor.reviews ?? []).map((review) => (
                 <article
                   key={review.id}
                   className="rounded-xl border p-4"

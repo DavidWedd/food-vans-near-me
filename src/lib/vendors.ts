@@ -5,16 +5,29 @@ import type { AustralianState, CuisineType, DietaryTag, PaymentMethod, Vendor } 
 
 /** Columns and related rows we read for a vendor. */
 export const VENDOR_SELECT =
-  '*, vendor_live_locations(*), vendor_schedule(*), menu_items(*)';
+  '*, vendor_live_locations(*), vendor_schedule(*), menu_items(*), reviews(id, display_name, rating, comment, vendor_reply, created_at)';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function toVendor(row: any): Vendor {
   const live = Array.isArray(row.vendor_live_locations)
     ? row.vendor_live_locations[0]
     : row.vendor_live_locations;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const reviews: any[] = (row.reviews ?? []).slice().sort((a: any, b: any) => b.created_at.localeCompare(a.created_at));
+  const avg = reviews.length ? reviews.reduce((t, r) => t + r.rating, 0) / reviews.length : undefined;
   return {
     id: row.id,
     business_name: row.business_name,
+    avg_rating: avg !== undefined ? Math.round(avg * 10) / 10 : undefined,
+    review_count: reviews.length,
+    reviews: reviews.map((r) => ({
+      id: r.id,
+      user_display_name: r.display_name,
+      rating: r.rating,
+      comment: r.comment ?? undefined,
+      vendor_reply: r.vendor_reply ?? undefined,
+      created_at: r.created_at,
+    })),
     slug: row.slug,
     cuisine_type: (row.cuisine_type ?? []) as CuisineType[],
     description: row.description ?? undefined,

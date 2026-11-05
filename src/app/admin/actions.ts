@@ -108,3 +108,12 @@ export async function setVendorOfWeek(id: string | null): Promise<AdminResult> {
   refresh();
   return { ok: true, message: id ? 'Now Vendor of the Week on the homepage.' : 'Vendor of the Week cleared.' };
 }
+
+export async function setReviewHidden(id: string, hidden: boolean): Promise<AdminResult> {
+  const supabase = await requireAdmin();
+  const { data, error } = await supabase.from('reviews').update({ hidden }).eq('id', id).select('vendors(slug)').single();
+  if (error) return { ok: false, error: 'That didn\'t save.' };
+  const v = Array.isArray(data?.vendors) ? data.vendors[0] : data?.vendors;
+  refresh((v as { slug?: string } | null)?.slug);
+  return { ok: true, message: hidden ? 'Review hidden.' : 'Review shown again.' };
+}
