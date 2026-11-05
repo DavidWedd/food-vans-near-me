@@ -51,6 +51,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
         status: v.status,
         subscription_tier: v.subscription_tier,
         founding: v.founding,
+        plan_status: v.plan_status ?? null,
         admin_notes: priv?.admin_notes ?? '',
         vendor_of_week: v.id === vendorOfWeekId,
         created_at: v.created_at,

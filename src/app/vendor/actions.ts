@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isInLiveArea } from '@/lib/regions';
 import { hasFeature } from '@/lib/plans';
+import { syncVendorByEmail } from '@/lib/stripe-sync';
 
 export type ActionResult = { ok: true; message?: string } | { ok: false; error: string };
 
@@ -62,7 +63,7 @@ function normaliseUrl(v: string) {
 
 /** Creates or updates the logged-in vendor's listing. */
 export async function saveListing(formData: FormData): Promise<ActionResult> {
-  const { supabase, vendor } = await myVendor();
+  const { supabase, user, vendor } = await myVendor();
 
   const business_name = clean(formData.get('business_name'), 80);
   if (business_name.length < 2) return { ok: false, error: 'Please enter your business name.' };
@@ -95,6 +96,8 @@ export async function saveListing(formData: FormData): Promise<ActionResult> {
     const slug = attempt === 0 ? base : `${base}-${Math.random().toString(36).slice(2, 6)}`;
     const { error } = await supabase.from('vendors').insert({ ...fields, slug });
     if (!error) {
+      // If they've already signed up through Stripe, pick up their plan straight away
+      await syncVendorByEmail(user.email);
       refreshPublic();
       return { ok: true, message: 'Thanks! Your listing is in. We\'ll check it and put you on the map, usually within a day.' };
     }

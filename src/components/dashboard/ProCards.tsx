@@ -15,10 +15,9 @@ export function LockedCard({ title, planName, children }: { title: string; planN
       </p>
       <p className="text-[14px]" style={{ color: 'var(--text)' }}>
         Included on the <strong>{planName}</strong> plan.{' '}
-        <a href="mailto:hello@foodvansnear.me?subject=Upgrade%20my%20plan" className="underline" style={{ color: 'var(--primary)' }}>
-          Email us to upgrade
+        <a href="#billing" className="underline" style={{ color: 'var(--primary)' }}>
+          Change plan
         </a>
-        .
       </p>
     </section>
   );
@@ -149,6 +148,61 @@ export function EnquiriesCard({ enquiries }: { enquiries: EnquiryRow[] }) {
           ))}
         </ul>
       )}
+    </section>
+  );
+}
+
+const STATUS_TEXT: Record<string, string> = {
+  trialing: 'Free period',
+  active: 'Active',
+  past_due: 'Payment overdue - please update your card',
+  unpaid: 'Unpaid',
+  canceled: 'Cancelled',
+  incomplete: 'Waiting for first payment',
+  incomplete_expired: 'Sign-up not completed',
+  paused: 'Paused',
+};
+
+export function BillingCard({
+  planName,
+  founding,
+  planStatus,
+  notice,
+}: {
+  planName: string;
+  founding: boolean;
+  planStatus: string | null;
+  notice: string | null;
+}) {
+  return (
+    <section id="billing" className="rounded-2xl border p-5 sm:p-6 mb-6" style={cardStyle}>
+      <h2 className="text-[20px] font-bold mb-1" style={{ fontFamily: 'var(--font-display)', color: 'var(--text)' }}>
+        Your plan
+      </h2>
+      <p className="text-[15px] mb-4" style={{ color: 'var(--text)' }}>
+        <strong>{planName}</strong>
+        {founding ? ' · founding vendor' : ''}
+        {planStatus ? ` · ${STATUS_TEXT[planStatus] ?? planStatus}` : ''}
+      </p>
+      {notice && (
+        <p role="status" className="text-[14px] mb-4 rounded-xl px-4 py-3" style={{ backgroundColor: 'var(--surface-off)', color: 'var(--text)' }}>
+          {notice}
+        </p>
+      )}
+      <div className="flex flex-wrap gap-3 items-center">
+        <form action="/api/billing" method="post">
+          <button className="rounded-full px-6 py-3 text-[15px] font-semibold text-white" style={{ backgroundColor: 'var(--primary)' }}>
+            Change plan, card or billing details
+          </button>
+        </form>
+        <a href="/join#pricing" className="text-[14px] underline" style={{ color: 'var(--muted)' }}>
+          Compare plans
+        </a>
+      </div>
+      <p className="text-[12px] mt-3" style={{ color: 'var(--muted)' }}>
+        Opens Stripe&apos;s secure billing page. You can switch plans, add or update a card, see invoices, or cancel at the
+        end of your billing period.
+      </p>
     </section>
   );
 }

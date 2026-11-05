@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react';
 import Link from 'next/link';
 import type { StripeInfo } from '@/lib/stripe-admin';
-import { approveWithStripe, clearLive, saveNotes, setPlan, setStatus, setVendorOfWeek, type AdminResult } from './actions';
+import { approveWithStripe, clearLive, saveNotes, setPlan, setStatus, setVendorOfWeek, syncFromStripe, type AdminResult } from './actions';
 import { Notice, inputClass, inputStyle } from '@/components/dashboard/ui';
 
 export interface AdminVendor {
@@ -15,6 +15,7 @@ export interface AdminVendor {
   status: 'pending' | 'approved' | 'hidden';
   subscription_tier: string;
   founding: boolean;
+  plan_status: string | null;
   admin_notes: string;
   vendor_of_week: boolean;
   created_at: string;
@@ -97,6 +98,15 @@ export function VendorAdminRow({ vendor: v }: { vendor: AdminVendor }) {
         ) : (
           <span style={{ color: 'var(--muted)' }}>no sign-up found for this email</span>
         )}
+        <span style={{ color: 'var(--muted)' }}>
+          {' '}
+          · on the site: {v.subscription_tier}
+          {v.founding ? ' (founding)' : ''}
+          {v.plan_status ? `, ${v.plan_status}` : ''}
+        </span>{' '}
+        <button onClick={() => run(() => syncFromStripe(v.id))} disabled={pending} className="underline" style={{ color: 'var(--primary)' }}>
+          refresh from Stripe
+        </button>
       </div>
 
       <div className="flex flex-wrap gap-2 mt-4">
