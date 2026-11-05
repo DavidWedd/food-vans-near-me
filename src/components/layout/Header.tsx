@@ -108,7 +108,7 @@ export function Header({
           <Link
             href="/"
             className="flex items-center gap-2 flex-shrink-0"
-            aria-label="Food Vans Near Me — home"
+            aria-label="Food Vans Near Me - home"
           >
             <span style={{ color: 'var(--primary)' }}>
               <FoodVanLogo size={26} />

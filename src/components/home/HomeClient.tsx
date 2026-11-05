@@ -201,7 +201,7 @@ export default function HomeClient({ vendors, vendorOfWeekId }: { vendors: Vendo
             {filtered.map((v) => (
               <li key={v.id}>
                 <Link href={`/van/${v.slug}`}>
-                  {v.business_name} — {v.suburb}, {v.state}
+                  {v.business_name} - {v.suburb}, {v.state}
                 </Link>
               </li>
             ))}
