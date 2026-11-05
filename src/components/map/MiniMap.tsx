@@ -54,7 +54,7 @@ export default function MiniMap({ lat, lng, vendorName }: MiniMapProps) {
 
       L.marker([lat, lng], { icon })
         .addTo(map)
-        .bindPopup(vendorName)
+        .bindPopup(vendorName.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`))
         .openPopup();
     }
 

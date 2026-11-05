@@ -133,6 +133,7 @@ export async function goLive(input: {
   hours: number;
   suburb: string;
   note: string;
+  eventName?: string;
 }): Promise<ActionResult> {
   const { supabase, vendor } = await myVendor();
   if (!vendor) return { ok: false, error: 'Save your listing details first.' };
@@ -147,6 +148,7 @@ export async function goLive(input: {
     lat,
     lng,
     suburb: input.suburb.slice(0, 60),
+    event_name: (input.eventName ?? '').trim().slice(0, 80) || null,
     notes: input.note.trim().slice(0, 200) || null,
     started_at: now.toISOString(),
     expires_at: new Date(now.getTime() + hours * 3600_000).toISOString(),

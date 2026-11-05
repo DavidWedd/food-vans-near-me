@@ -1,4 +1,5 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
+import { Analytics } from '@vercel/analytics/next';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet.markercluster/dist/MarkerCluster.css';
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
@@ -21,6 +22,15 @@ export const metadata: Metadata = {
     locale: 'en_AU',
   },
   twitter: { card: 'summary_large_image' },
+  icons: {
+    icon: [{ url: '/favicon.svg', type: 'image/svg+xml' }],
+    apple: '/apple-touch-icon.png',
+  },
+  appleWebApp: { capable: true, title: 'Food Vans', statusBarStyle: 'default' },
+};
+
+export const viewport: Viewport = {
+  themeColor: '#E07B00',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -50,6 +60,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           Skip to main content
         </a>
         {children}
+        <Analytics />
       </body>
     </html>
   );

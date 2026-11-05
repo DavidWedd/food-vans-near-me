@@ -9,6 +9,7 @@ import { foundingSpotsLeft } from '@/lib/stripe';
 import { FOUNDING } from '@/lib/plans';
 import { VendorAdminRow, type AdminVendor } from './VendorAdminRow';
 import { ReviewModeration, type AdminReview } from './ReviewModeration';
+import { AddVendorForm } from './AddVendorForm';
 
 export const metadata: Metadata = {
   title: 'Admin - Food Vans Near Me',
@@ -49,6 +50,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
         business_name: v.business_name,
         suburb: v.suburb,
         owner_email: priv?.owner_email ?? null,
+        claimed: Boolean(v.owner_id),
         status: v.status,
         subscription_tier: v.subscription_tier,
         founding: v.founding,
@@ -114,6 +116,8 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
           <Stat label="Trading right now" value={liveNow} />
           <Stat label="Founding spots left" value={spots ?? FOUNDING.spots} suffix={spots === null ? ' (Stripe not connected)' : ` of ${FOUNDING.spots}`} />
         </div>
+
+        <AddVendorForm />
 
         <nav className="flex flex-wrap gap-2 mb-6" aria-label="Filter vendors">
           {tabs.map((t) => (

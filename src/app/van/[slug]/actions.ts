@@ -110,3 +110,66 @@ export async function submitEnquiry(vendorId: string, formData: FormData): Promi
   ]);
   return { ok: true };
 }
+
+export type ReportResult = { ok: true } | { ok: false; error: string };
+
+const REPORT_REASONS: Record<string, string> = {
+  closed: 'Van has closed or stopped trading',
+  'wrong-location': 'Wrong location or times',
+  'wrong-details': 'Wrong details (menu, contact, photos)',
+  'not-their-listing': 'This is my van and I didn\'t list it',
+  other: 'Something else',
+};
+
+/** "Something wrong with this listing?" - saves the report and emails hello@. */
+export async function reportListing(vendorId: string, formData: FormData): Promise<ReportResult> {
+  if (String(formData.get('company_website') ?? '').trim()) return { ok: true };
+  const reasonKey = String(formData.get('reason') ?? '');
+  const reason = REPORT_REASONS[reasonKey];
+  if (!reason) return { ok: false, error: 'Please pick what\'s wrong.' };
+  const details = String(formData.get('details') ?? '').trim().slice(0, 1500);
+  const email = String(formData.get('email') ?? '').trim().toLowerCase().slice(0, 120);
+  if (email && !EMAIL_RE.test(email)) return { ok: false, error: 'Please check your email address, or leave it blank.' };
+
+  const db = createAdminClient();
+  if (!db) return { ok: false, error: 'Sorry, reports aren\'t working right now. Please email hello@foodvansnear.me.' };
+  const { data: vendor } = await db.from('vendors').select('id, slug, business_name, status').eq('id', vendorId).maybeSingle();
+  if (!vendor || vendor.status !== 'approved') return { ok: false, error: 'We couldn\'t find that listing.' };
+
+  const hourAgo = new Date(Date.now() - 3600_000).toISOString();
+  const { count } = await db
+    .from('listing_reports')
+    .select('id', { count: 'exact', head: true })
+    .eq('vendor_id', vendorId)
+    .gte('created_at', hourAgo);
+  if ((count ?? 0) >= 5) return { ok: true }; // already plenty of reports this hour
+
+  const { data: saved, error } = await db
+    .from('listing_reports')
+    .insert({ vendor_id: vendorId, reason, details: details || null, email: email || null })
+    .select('id')
+    .single();
+  if (error) return { ok: false, error: 'Sorry, that didn\'t send. Please try again.' };
+
+  const url = `https://foodvansnear.me/van/${vendor.slug}`;
+  const text =
+    `Listing report for ${vendor.business_name}\n${url}\n\nWhat's wrong: ${reason}\n` +
+    `Details: ${details || 'None given'}\nFrom: ${email || 'Not given'}\n\nAdmin: https://foodvansnear.me/admin?show=all`;
+  const html = `<div style="font-family:Arial,Helvetica,sans-serif;max-width:560px;color:#222">
+<h2 style="color:#E07B00">Listing report</h2>
+<p><a href="${url}">${escapeHtml(vendor.business_name)}</a></p>
+<p><strong>What's wrong:</strong> ${escapeHtml(reason)}</p>
+<p><strong>Details:</strong><br>${details ? escapeHtml(details).replace(/\n/g, '<br>') : 'None given'}</p>
+<p><strong>From:</strong> ${email ? escapeHtml(email) : 'Not given'}</p>
+<p style="font-size:13px;color:#666"><a href="https://foodvansnear.me/admin?show=all">Open admin</a></p>
+</div>`;
+  const sent = await sendEmail({
+    to: 'hello@foodvansnear.me',
+    subject: `Listing report: ${vendor.business_name}`,
+    text,
+    html,
+    ...(email ? { replyTo: email } : {}),
+  });
+  await db.from('listing_reports').update({ emailed: sent }).eq('id', saved.id);
+  return { ok: true };
+}

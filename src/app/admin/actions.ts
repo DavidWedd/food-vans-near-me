@@ -117,3 +117,69 @@ export async function setReviewHidden(id: string, hidden: boolean): Promise<Admi
   refresh((v as { slug?: string } | null)?.slug);
   return { ok: true, message: hidden ? 'Review hidden.' : 'Review shown again.' };
 }
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+const ADD_CUISINES = ['coffee', 'tacos', 'bbq', 'asian', 'dessert', 'burgers', 'vegan', 'pizza', 'thai', 'japanese', 'fish-chips', 'bubble-tea', 'indian', 'mexican', 'other'];
+
+function slugify(name: string) {
+  return (
+    name.toLowerCase().replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 50) || 'food-van'
+  );
+}
+
+/** Admin adds a van themselves. If an owner email is given, that person takes it over when they log in. */
+export async function addVendor(formData: FormData): Promise<AdminResult> {
+  const supabase = await requireAdmin();
+  const get = (k: string, max: number) => String(formData.get(k) ?? '').trim().slice(0, max);
+  const business_name = get('business_name', 80);
+  if (business_name.length < 2) return { ok: false, error: 'Please enter the van\'s name.' };
+  const ownerEmail = get('owner_email', 120).toLowerCase();
+  if (ownerEmail && !EMAIL_RE.test(ownerEmail)) return { ok: false, error: 'Please check the owner\'s email.' };
+  const instagram = get('instagram_handle', 100).replace(/^https?:\/\/(www\.)?instagram\.com\//i, '').replace(/^@/, '').replace(/\/.*$/, '');
+  const website = get('website_url', 200);
+  const fields = {
+    business_name,
+    suburb: get('suburb', 60),
+    description: get('description', 1500) || null,
+    cuisine_type: formData.getAll('cuisine_type').map(String).filter((c) => ADD_CUISINES.includes(c)),
+    instagram_handle: instagram || null,
+    website_url: website ? (/^https?:\/\//i.test(website) ? website : `https://${website}`) : null,
+    phone: get('phone', 30) || null,
+    status: formData.get('publish') === 'on' ? 'approved' : 'pending',
+  };
+
+  const base = slugify(business_name);
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const slug = attempt === 0 ? base : `${base}-${Math.random().toString(36).slice(2, 6)}`;
+    const { data, error } = await supabase.from('vendors').insert({ ...fields, slug }).select('id, slug').single();
+    if (error?.code === '23505') continue;
+    if (error || !data) return { ok: false, error: 'That didn\'t save.' };
+    if (ownerEmail) {
+      await supabase.from('vendor_private').upsert({ vendor_id: data.id, owner_email: ownerEmail }, { onConflict: 'vendor_id' });
+    }
+    refresh(data.slug);
+    return {
+      ok: true,
+      message: ownerEmail
+        ? `Added. When ${ownerEmail} logs in at foodvansnear.me/vendor/login, the listing becomes theirs.`
+        : 'Added. You can hand it over later by adding the owner\'s email on its card below.',
+    };
+  }
+  return { ok: false, error: 'That didn\'t save.' };
+}
+
+/** Sets who takes over a van the admin added. Only for vans nobody has logged in to yet. */
+export async function setOwnerEmail(id: string, email: string): Promise<AdminResult> {
+  const supabase = await requireAdmin();
+  const clean = email.trim().toLowerCase().slice(0, 120);
+  if (clean && !EMAIL_RE.test(clean)) return { ok: false, error: 'Please check the email.' };
+  const { data: v } = await supabase.from('vendors').select('owner_id').eq('id', id).single();
+  if (v?.owner_id) return { ok: false, error: 'This van is already linked to a login, so it can\'t be handed over.' };
+  const { error } = await supabase.from('vendor_private').upsert({ vendor_id: id, owner_email: clean || null }, { onConflict: 'vendor_id' });
+  if (error) return { ok: false, error: 'That didn\'t save.' };
+  revalidatePath('/admin');
+  return {
+    ok: true,
+    message: clean ? `Done. When ${clean} logs in at foodvansnear.me/vendor/login, the listing becomes theirs.` : 'Hand-over email removed.',
+  };
+}
