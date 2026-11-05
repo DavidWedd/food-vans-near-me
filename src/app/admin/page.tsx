@@ -8,6 +8,7 @@ import { stripeInfoFor } from '@/lib/stripe-admin';
 import { foundingSpotsLeft } from '@/lib/stripe';
 import { FOUNDING } from '@/lib/plans';
 import { VendorAdminRow, type AdminVendor } from './VendorAdminRow';
+import { ReviewModeration, type AdminReview } from './ReviewModeration';
 
 export const metadata: Metadata = {
   title: 'Admin - Food Vans Near Me',
@@ -65,6 +66,23 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
     })
   );
   const spots = await foundingSpotsLeft();
+  const { data: latestReviews } = await supabase
+    .from('reviews')
+    .select('id, display_name, rating, comment, hidden, created_at, vendors(business_name)')
+    .order('created_at', { ascending: false })
+    .limit(30);
+  const reviewRows: AdminReview[] = (latestReviews ?? []).map((r) => {
+    const v = Array.isArray(r.vendors) ? r.vendors[0] : r.vendors;
+    return {
+      id: r.id,
+      vendor_name: (v as { business_name?: string } | null)?.business_name ?? '',
+      display_name: r.display_name,
+      rating: r.rating,
+      comment: r.comment,
+      hidden: r.hidden,
+      created_at: r.created_at,
+    };
+  });
   const liveNow = vendors.filter((v) => {
     const l = Array.isArray(v.vendor_live_locations) ? v.vendor_live_locations[0] : v.vendor_live_locations;
     return l && new Date(l.expires_at) > new Date();
@@ -123,6 +141,8 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
             ))}
           </div>
         )}
+
+        <ReviewModeration reviews={reviewRows} />
       </main>
       <Footer />
     </>

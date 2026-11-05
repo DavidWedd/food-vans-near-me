@@ -1,6 +1,8 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { after } from 'next/server';
+import { notifyFavourites } from '@/lib/alerts';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isInLiveArea } from '@/lib/regions';
@@ -152,6 +154,8 @@ export async function goLive(input: {
   if (error) return { ok: false, error: 'Sorry, that didn\'t work. Please try again.' };
   // Keep a history for the vendor's own stats
   await supabase.from('live_sessions').insert({ vendor_id: vendor.id, hours, suburb: input.suburb.slice(0, 60) || null });
+  // Let people who saved this van know (once a day). Runs after the response so the vendor isn't kept waiting.
+  after(() => notifyFavourites(vendor.id, input.suburb, input.note.trim() || null));
   refreshPublic(vendor.slug);
   return { ok: true, message: `You're on the map for the next ${hours} hours.` };
 }

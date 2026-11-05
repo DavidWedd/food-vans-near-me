@@ -97,7 +97,17 @@ export default function TermsPage() {
         </li>
       </ul>
 
-      <h2>5. Using the site fairly</h2>
+      <h2>5. Reviews</h2>
+      <ul>
+        <li>Reviews must be your own honest experience of the van&apos;s food and service.</li>
+        <li>
+          Don&apos;t post reviews of your own business or a competitor, or anything abusive, discriminatory,
+          defamatory or that includes someone else&apos;s personal information.
+        </li>
+        <li>Vendors can reply publicly. We may hide or remove reviews that break these rules.</li>
+      </ul>
+
+      <h2>6. Using the site fairly</h2>
       <p>You must not:</p>
       <ul>
         <li>post false, misleading or offensive content, or pretend to be another business</li>
@@ -106,19 +116,19 @@ export default function TermsPage() {
         <li>use the site to send spam or for anything unlawful</li>
       </ul>
 
-      <h2>6. Our content</h2>
+      <h2>7. Our content</h2>
       <p>
         The site&apos;s design, logo, text and software belong to us or our licensors. Map data is provided by
         Mapbox and OpenStreetMap contributors under their own terms.
       </p>
 
-      <h2>7. Your rights under Australian Consumer Law</h2>
+      <h2>8. Your rights under Australian Consumer Law</h2>
       <p>
         Our services come with guarantees that cannot be excluded under the Australian Consumer Law. Nothing in
         these terms limits those rights.
       </p>
 
-      <h2>8. Limits on our responsibility</h2>
+      <h2>9. Limits on our responsibility</h2>
       <p>
         To the extent the law allows, we are not responsible for the food, service, prices, safety or conduct
         of vendors or markets, or for loss caused by inaccurate listings or the site being unavailable. Where
@@ -126,25 +136,25 @@ export default function TermsPage() {
         us for the relevant period.
       </p>
 
-      <h2>9. Suspending or closing accounts</h2>
+      <h2>10. Suspending or closing accounts</h2>
       <p>
         We may suspend or close a vendor account that breaches these terms, after letting you know where
         reasonable. You can close your account at any time by contacting us.
       </p>
 
-      <h2>10. Changes to these terms</h2>
+      <h2>11. Changes to these terms</h2>
       <p>
         We may update these terms as the site grows. The date at the top shows when they last changed. For
         changes that significantly affect vendors, we&apos;ll give at least 30 days&apos; notice by email.
       </p>
 
-      <h2>11. Governing law</h2>
+      <h2>12. Governing law</h2>
       <p>
         These terms are governed by the laws of {BUSINESS.state}, Australia, and the courts of{' '}
         {BUSINESS.state} have jurisdiction.
       </p>
 
-      <h2>12. Contact us</h2>
+      <h2>13. Contact us</h2>
       <p>
         {BUSINESS.legalName} trading as {BUSINESS.tradingName}
         <br />

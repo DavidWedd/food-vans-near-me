@@ -56,6 +56,12 @@ export default function PrivacyPage() {
         </li>
       </ul>
       <p>
+        <strong>If you create an account to save vans or leave reviews</strong>, we collect your email address,
+        the vans you save and whether you want trading alerts, and any reviews you write. Reviews are public and
+        show the name you choose. We email you when a van you saved starts trading (at most once a day per van),
+        and every email has a link to stop them.
+      </p>
+      <p>
         <strong>If you list a food van or other mobile food business</strong>, we also collect:
       </p>
       <ul>

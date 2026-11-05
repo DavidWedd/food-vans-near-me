@@ -4,6 +4,8 @@ import Image from 'next/image';
 import { useEffect } from 'react';
 import { trackVendor } from '@/lib/track';
 import { EnquiryForm } from './EnquiryForm';
+import { SaveButton } from '@/components/account/SaveButton';
+import { ReviewForm } from '@/components/account/ReviewForm';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import {
@@ -17,7 +19,6 @@ import {
   MapPin,
   Calendar,
   Star,
-  MessageSquare,
 } from 'lucide-react';
 import type { Vendor } from '@/types';
 import { Badge } from '@/components/ui/Badge';
@@ -279,6 +280,10 @@ export function VendorProfile({ vendor, similarVendors, enquiriesEnabled = false
           </div>
         </section>
 
+        <div className="mb-8">
+          <SaveButton vendorId={vendor.id} slug={vendor.slug} />
+        </div>
+
         {/* About */}
         {vendor.description && (
           <section className="mb-8" aria-label="About">
@@ -466,8 +471,8 @@ export function VendorProfile({ vendor, similarVendors, enquiriesEnabled = false
         )}
 
         {/* Reviews */}
-        {vendor.reviews && vendor.reviews.length > 0 && (
-          <section className="mb-8" aria-label="Customer reviews">
+        {(
+          <section id="reviews" className="mb-8 scroll-mt-20" aria-label="Customer reviews">
             <div className="flex items-center justify-between mb-4">
               <h2
                 className="text-xl font-bold"
@@ -475,17 +480,25 @@ export function VendorProfile({ vendor, similarVendors, enquiriesEnabled = false
               >
                 Reviews
               </h2>
-              {vendor.avg_rating !== undefined && (
+              {vendor.avg_rating !== undefined && vendor.review_count ? (
                 <StarRating
                   rating={vendor.avg_rating}
                   reviewCount={vendor.review_count}
                   size={16}
                 />
-              )}
+              ) : null}
             </div>
 
+            <div className="mb-5">
+              <ReviewForm vendorId={vendor.id} slug={vendor.slug} />
+            </div>
+            {(!vendor.reviews || vendor.reviews.length === 0) && (
+              <p className="text-[14px]" style={{ color: 'var(--muted)' }}>
+                No reviews yet. Tried them? Be the first to say how it was.
+              </p>
+            )}
             <div className="space-y-4">
-              {vendor.reviews.map((review) => (
+              {(vendor.reviews ?? []).map((review) => (
                 <article
                   key={review.id}
                   className="rounded-xl border p-4"
@@ -549,21 +562,6 @@ export function VendorProfile({ vendor, similarVendors, enquiriesEnabled = false
                 </article>
               ))}
             </div>
-
-            {/* Write a review button */}
-            <button
-              disabled
-              className="mt-4 inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-[14px] font-semibold border cursor-not-allowed opacity-50"
-              style={{ borderColor: 'var(--border)', color: 'var(--muted)' }}
-              title="Sign in to write a review"
-              aria-describedby="review-disabled-tooltip"
-            >
-              <MessageSquare size={16} />
-              Write a Review
-            </button>
-            <p id="review-disabled-tooltip" className="sr-only">
-              Sign in to write a review
-            </p>
           </section>
         )}
 
