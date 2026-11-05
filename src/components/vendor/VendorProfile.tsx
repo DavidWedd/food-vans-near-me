@@ -19,7 +19,6 @@ import {
   MapPin,
   Calendar,
   Star,
-  MessageSquare,
 } from 'lucide-react';
 import type { Vendor } from '@/types';
 import { Badge } from '@/components/ui/Badge';
@@ -563,21 +562,6 @@ export function VendorProfile({ vendor, similarVendors, enquiriesEnabled = false
                 </article>
               ))}
             </div>
-
-            {/* Write a review button */}
-            <button
-              disabled
-              className="mt-4 inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-[14px] font-semibold border cursor-not-allowed opacity-50"
-              style={{ borderColor: 'var(--border)', color: 'var(--muted)' }}
-              title="Sign in to write a review"
-              aria-describedby="review-disabled-tooltip"
-            >
-              <MessageSquare size={16} />
-              Write a Review
-            </button>
-            <p id="review-disabled-tooltip" className="sr-only">
-              Sign in to write a review
-            </p>
           </section>
         )}
 
