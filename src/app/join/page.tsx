@@ -37,7 +37,7 @@ const FAQS = [
   },
   {
     q: 'What payment methods do customers use?',
-    a: 'You can specify which payment methods you accept — EFTPOS, cash, Apple Pay and Google Pay. This is displayed on your profile so customers know what to bring.',
+    a: 'You can specify which payment methods you accept: EFTPOS, cash, Apple Pay and Google Pay. This is displayed on your profile so customers know what to bring.',
   },
   {
     q: 'Do I need an ABN to sign up?',
