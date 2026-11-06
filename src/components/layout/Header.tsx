@@ -3,41 +3,9 @@
 import Link from 'next/link';
 import { useState, useEffect, useRef } from 'react';
 import { Sun, Moon, Menu, X, MapPin, Search, Navigation } from 'lucide-react';
+import { Logo } from '@/components/brand/Logo';
 
 /* ── Logo SVG ─────────────────────────────────────── */
-function FoodVanLogo({ size = 28 }: { size?: number }) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 28 28"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      aria-hidden="true"
-    >
-      {/* Van body */}
-      <rect x="2" y="13" width="22" height="10" rx="2" fill="currentColor" opacity="0.9" />
-      {/* Van cab */}
-      <path d="M16 13H24V11L20 8H16V13Z" fill="currentColor" />
-      {/* Van window */}
-      <rect x="17" y="9" width="5" height="3" rx="1" fill="white" opacity="0.8" />
-      {/* Service window */}
-      <rect x="5" y="14" width="7" height="5" rx="1" fill="white" opacity="0.7" />
-      {/* Wheels */}
-      <circle cx="7" cy="23" r="3" fill="currentColor" opacity="0.6" />
-      <circle cx="7" cy="23" r="1.5" fill="white" opacity="0.8" />
-      <circle cx="19" cy="23" r="3" fill="currentColor" opacity="0.6" />
-      <circle cx="19" cy="23" r="1.5" fill="white" opacity="0.8" />
-      {/* Location pin rising from roof */}
-      <path
-        d="M13 12C13 10.3 14.3 9 16 9C17.7 9 19 10.3 19 12C19 14 16 17 16 17C16 17 13 14 13 12Z"
-        fill="var(--primary,#E07B00)"
-      />
-      <circle cx="16" cy="12" r="1.2" fill="white" />
-    </svg>
-  );
-}
-
 /* ── Theme toggle ─────────────────────────────────── */
 function ThemeToggle() {
   const [theme, setTheme] = useState<'light' | 'dark' | null>(null);
@@ -110,8 +78,8 @@ export function Header({
             className="flex items-center gap-2 flex-shrink-0"
             aria-label="Food Vans Near Me - home"
           >
-            <span style={{ color: 'var(--primary)' }}>
-              <FoodVanLogo size={26} />
+            <span className="flex">
+              <Logo size={36} />
             </span>
             <span
               className="font-bold text-[17px] hidden sm:block"

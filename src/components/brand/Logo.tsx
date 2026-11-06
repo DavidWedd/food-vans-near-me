@@ -1,0 +1,28 @@
+/**
+ * The Food Vans Near Me van icon - same design as the home-screen app icon.
+ * Orange van, dark wheels, white map pin on the roof so it reads at small sizes.
+ */
+export function Logo({ size = 32, className }: { size?: number; className?: string }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="1 7 26 23"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+      className={className}
+    >
+      <rect x="2" y="14" width="24" height="12" rx="2.5" fill="#E07B00" />
+      <path d="M18 14H26V12L22 8H18V14Z" fill="#C56A00" />
+      <rect x="19" y="9.5" width="5.5" height="3.5" rx="1" fill="#fff" opacity="0.85" />
+      <rect x="5" y="15" width="8" height="6" rx="1.5" fill="#fff" opacity="0.8" />
+      <circle cx="8" cy="26" r="3.5" fill="#2A2520" />
+      <circle cx="8" cy="26" r="1.8" fill="#fff" opacity="0.9" />
+      <circle cx="21" cy="26" r="3.5" fill="#2A2520" />
+      <circle cx="21" cy="26" r="1.8" fill="#fff" opacity="0.9" />
+      <path d="M15 13C15 10.8 16.8 9 19 9C21.2 9 23 10.8 23 13C23 15.5 19 20 19 20C19 20 15 15.5 15 13Z" fill="#fff" />
+      <circle cx="19" cy="13" r="1.8" fill="#E07B00" />
+    </svg>
+  );
+}

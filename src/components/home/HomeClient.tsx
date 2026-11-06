@@ -18,6 +18,7 @@ import { StarRating } from '@/components/vendor/StarRating';
 import { Badge } from '@/components/ui/Badge';
 import { ArrowRight } from 'lucide-react';
 import { MarketCover } from '@/components/ui/MarketCover';
+import { Logo } from '@/components/brand/Logo';
 
 const VendorMap = dynamic(() => import('@/components/map/VendorMap'), {
   ssr: false,
@@ -239,7 +240,7 @@ export default function HomeClient({ vendors, vendorOfWeekId }: { vendors: Vendo
             className="max-w-3xl mx-auto px-4 py-12 text-center"
             aria-label="Launching soon"
           >
-            <div className="text-5xl mb-4" aria-hidden="true">🚚</div>
+            <Logo size={72} className="mx-auto mb-4" />
             <h2
               className="text-[24px] sm:text-[28px] font-extrabold mb-3 leading-tight"
               style={{ fontFamily: 'var(--font-display)', color: 'var(--text)' }}
