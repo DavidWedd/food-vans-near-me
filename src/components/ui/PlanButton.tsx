@@ -1,5 +1,5 @@
 import { FOUNDING_SPOT_MAILTO } from '@/lib/business';
-import type { PlanId } from '@/lib/plans';
+import type { PlanId, RegionId } from '@/lib/plans';
 
 /**
  * Sends the vendor to Stripe Checkout for a plan. Works without JavaScript (plain form post).
@@ -7,12 +7,15 @@ import type { PlanId } from '@/lib/plans';
  */
 export function PlanButton({
   plan,
+  region,
   enabled,
   className,
   style,
   children,
 }: {
   plan: PlanId;
+  /** The region the vendor picked on the Join page, if any. */
+  region?: RegionId;
   enabled: boolean;
   className?: string;
   style?: React.CSSProperties;
@@ -28,6 +31,7 @@ export function PlanButton({
   return (
     <form action="/api/checkout" method="post">
       <input type="hidden" name="plan" value={plan} />
+      {region && <input type="hidden" name="region" value={region} />}
       <button type="submit" className={`w-full cursor-pointer ${className ?? ''}`} style={style}>
         {children}
       </button>

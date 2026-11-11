@@ -87,6 +87,7 @@ export function VendorAdminRow({ vendor: v }: { vendor: AdminVendor }) {
           <>
             {v.stripe.plan ? `${v.stripe.plan} plan` : 'no plan'} · {v.stripe.status}
             {v.stripe.founding ? ' · founding vendor' : ''}
+            {v.stripe.region ? ` · ${v.stripe.region}` : ''}
             {v.stripe.freeUntil ? ` · free until ${fmt(v.stripe.freeUntil)}` : ''}
             {v.stripe.customerUrl && (
               <>

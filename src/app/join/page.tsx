@@ -4,8 +4,8 @@ import { Footer } from '@/components/layout/Footer';
 import type { Metadata } from 'next';
 import { BUSINESS } from '@/lib/business';
 import { PlanButton } from '@/components/ui/PlanButton';
-import { FOUNDING, PLANS, formatPrice } from '@/lib/plans';
-import { foundingSpotsLeft, getStripe } from '@/lib/stripe';
+import { FOUNDING, FOUNDING_REGIONS, PLANS, formatPrice, isRegionId } from '@/lib/plans';
+import { foundingSpotsByRegion, getStripe } from '@/lib/stripe';
 
 export const metadata: Metadata = {
   title: 'List Your Food Van - Food Vans Near Me',
@@ -45,7 +45,7 @@ const FAQS = [
   },
   {
     q: 'What is the founding vendor offer?',
-    a: 'The first 15 Tasmanian food vans, coffee carts and mobile food businesses to join get any plan free for 12 months. No credit card needed. We\'ll remind you well before the free year ends, and you only pay if you add a card and choose to continue.',
+    a: 'We have 15 founding spots for Tasmanian food vans, coffee carts and mobile food businesses, shared across the state: 6 in the South, 4 in the North, 3 in the North West and 2 on the East Coast. Founding vendors get any plan free for 12 months. No credit card needed. We\'ll remind you well before the free year ends, and you only pay if you add a card and choose to continue.',
   },
   {
     q: 'Can I cancel anytime?',
@@ -85,13 +85,19 @@ function FeatureRow({ label, basic, pro, premium }: { label: string; basic: bool
 export default async function JoinPage({
   searchParams,
 }: {
-  searchParams: Promise<{ checkout?: string }>;
+  searchParams: Promise<{ checkout?: string; region?: string }>;
 }) {
-  const { checkout } = await searchParams;
+  const { checkout, region: regionParam } = await searchParams;
   const checkoutEnabled = getStripe() !== null;
-  const spotsLeft = checkoutEnabled ? await foundingSpotsLeft() : null;
+  const spotsByRegion = checkoutEnabled ? await foundingSpotsByRegion() : null;
+  const spotsLeft = spotsByRegion ? Object.values(spotsByRegion).reduce((sum, n) => sum + n, 0) : null;
   // If we can't count (e.g. Stripe not set up yet), keep showing the offer.
-  const foundingOpen = spotsLeft === null || spotsLeft > 0;
+  const offerOpen = spotsLeft === null || spotsLeft > 0;
+  // Founding spots are per region. The vendor picks theirs in the offer box below.
+  const region = isRegionId(regionParam) ? FOUNDING_REGIONS.find((r) => r.id === regionParam) : undefined;
+  const regionFull = Boolean(region && spotsByRegion && spotsByRegion[region.id] === 0);
+  // The free year shows on the plans unless the vendor's own region has run out.
+  const foundingOpen = offerOpen && !regionFull;
   const trialLabel = (days: number, cents: number) =>
     foundingOpen ? `Free for 12 months, then ${formatPrice(cents)}/mo` : days > 0 ? `Free ${days}-day trial, then ${formatPrice(cents)}/mo` : `${formatPrice(cents)}/mo`;
   const ctaLabel = (days: number) => (foundingOpen ? 'Claim free year' : days > 0 ? 'Start free trial' : 'Get started');
@@ -126,7 +132,16 @@ export default async function JoinPage({
           aria-label="Pricing plans"
           style={{ backgroundColor: 'var(--surface-off)' }}
         >
-          {checkout && (
+          {checkout === 'pick-region' && (
+            <div
+              role="alert"
+              className="max-w-3xl mx-auto mb-6 rounded-xl border p-4 text-center text-[15px]"
+              style={{ borderColor: 'var(--primary)', backgroundColor: 'var(--surface)', color: 'var(--text)' }}
+            >
+              Please choose where you mostly trade first, then pick your plan.
+            </div>
+          )}
+          {checkout && checkout !== 'pick-region' && (
             <div
               role="alert"
               className="max-w-3xl mx-auto mb-6 rounded-xl border p-4 text-center text-[15px]"
@@ -137,7 +152,7 @@ export default async function JoinPage({
               we&apos;ll set you up.
             </div>
           )}
-          {foundingOpen && (
+          {offerOpen && (
           <div
             className="max-w-3xl mx-auto mb-10 rounded-2xl border-2 p-6 text-center"
             style={{ borderColor: 'var(--primary)', backgroundColor: 'color-mix(in srgb, var(--primary) 7%, var(--surface))' }}
@@ -146,14 +161,41 @@ export default async function JoinPage({
               Founding vendor offer
             </p>
             <p className="text-[20px] font-extrabold mb-2" style={{ fontFamily: 'var(--font-display)', color: 'var(--text)' }}>
-              The first {FOUNDING.spots} Tasmanian vendors get any plan free for 12 months
+              {FOUNDING.spots} founding vendors across Tasmania get any plan free for 12 months
             </p>
             <p className="text-[15px] mb-4" style={{ color: 'var(--muted)' }}>
-              No card, no catch. Pick a plan below to claim your spot.
+              No card, no catch. Choose where you mostly trade, then pick a plan below to claim your spot.
             </p>
-            {spotsLeft !== null && (
-              <p className="text-[15px] font-bold" style={{ color: 'var(--primary)' }}>
-                {spotsLeft} of {FOUNDING.spots} spots left
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-left">
+              {FOUNDING_REGIONS.map((r) => {
+                const left = spotsByRegion ? spotsByRegion[r.id] : null;
+                const selected = region?.id === r.id;
+                return (
+                  <a
+                    key={r.id}
+                    href={`/join?region=${r.id}#pricing`}
+                    aria-current={selected ? 'true' : undefined}
+                    className="block rounded-xl border-2 p-3"
+                    style={{
+                      borderColor: selected ? 'var(--primary)' : 'var(--border)',
+                      backgroundColor: selected ? 'color-mix(in srgb, var(--primary) 14%, var(--surface))' : 'var(--surface)',
+                      color: 'var(--text)',
+                    }}
+                  >
+                    <span className="block text-[15px] font-bold">{r.name}</span>
+                    <span className="block text-[12px]" style={{ color: 'var(--muted)' }}>{r.hint}</span>
+                    <span className="block text-[13px] font-bold mt-1" style={{ color: left === 0 ? 'var(--muted)' : 'var(--primary)' }}>
+                      {left === null ? `${r.spots} spots` : left === 0 ? 'All taken' : `${left} of ${r.spots} left`}
+                    </span>
+                  </a>
+                );
+              })}
+            </div>
+            {region && (
+              <p className="text-[15px] font-bold mt-4" style={{ color: 'var(--text)' }}>
+                {regionFull
+                  ? `The ${region.name} founding spots are all taken. You can still join with the free trial below.`
+                  : `${region.name} selected. Now pick your plan below.`}
               </p>
             )}
           </div>
@@ -178,6 +220,7 @@ export default async function JoinPage({
                         <p className="text-[13px] mb-3" style={{ color: 'var(--muted)' }}>{trialLabel(PLANS.basic.trialDays, PLANS.basic.priceCents)}</p>
                         <PlanButton
                           plan="basic"
+                          region={region?.id}
                           enabled={checkoutEnabled}
                           className="block text-center rounded-full py-2 text-[14px] font-semibold border"
                           style={{ borderColor: 'var(--border)', color: 'var(--text)' }}
@@ -208,6 +251,7 @@ export default async function JoinPage({
                         <p className="text-[13px] mb-3" style={{ color: 'var(--muted)' }}>{trialLabel(PLANS.pro.trialDays, PLANS.pro.priceCents)}</p>
                         <PlanButton
                           plan="pro"
+                          region={region?.id}
                           enabled={checkoutEnabled}
                           className="block text-center rounded-full py-2 text-[14px] font-semibold text-white"
                           style={{ backgroundColor: 'var(--primary)' }}
@@ -229,6 +273,7 @@ export default async function JoinPage({
                         <p className="text-[13px] mb-3" style={{ color: 'var(--muted)' }}>{trialLabel(PLANS.premium.trialDays, PLANS.premium.priceCents)}</p>
                         <PlanButton
                           plan="premium"
+                          region={region?.id}
                           enabled={checkoutEnabled}
                           className="block text-center rounded-full py-2 text-[14px] font-semibold text-white"
                           style={{ backgroundColor: 'var(--teal)' }}
@@ -320,7 +365,8 @@ export default async function JoinPage({
                   </ul>
                   <PlanButton
                     plan={plan.id}
-                    enabled={checkoutEnabled}
+                    region={region?.id}
+                          enabled={checkoutEnabled}
                     className={`block text-center rounded-full py-2.5 text-[14px] font-semibold ${plan.ctaClass}`}
                     style={plan.ctaStyle}
                   >
@@ -430,7 +476,7 @@ export default async function JoinPage({
           </h2>
           <p className="text-[16px] mb-8" style={{ color: 'var(--muted)' }}>
             {foundingOpen
-              ? `The first ${FOUNDING.spots} Tasmanian vendors get any plan free for 12 months. Sign up in a couple of minutes and we'll help set up your listing.`
+              ? `${FOUNDING.spots} founding vendors across Tasmania get any plan free for 12 months. Sign up in a couple of minutes and we'll help set up your listing.`
               : 'Sign up in a couple of minutes and we\'ll help set up your listing.'}
           </p>
           <a

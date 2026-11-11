@@ -5,8 +5,8 @@ import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { createClient, supabaseConfigured } from '@/lib/supabase/server';
 import { stripeInfoFor } from '@/lib/stripe-admin';
-import { foundingSpotsLeft } from '@/lib/stripe';
-import { FOUNDING } from '@/lib/plans';
+import { foundingSpotsByRegion } from '@/lib/stripe';
+import { FOUNDING, FOUNDING_REGIONS } from '@/lib/plans';
 import { VendorAdminRow, type AdminVendor } from './VendorAdminRow';
 import { ReviewModeration, type AdminReview } from './ReviewModeration';
 import { AddVendorForm } from './AddVendorForm';
@@ -67,7 +67,8 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
       };
     })
   );
-  const spots = await foundingSpotsLeft();
+  const spotsByRegion = await foundingSpotsByRegion();
+  const spots = spotsByRegion ? Object.values(spotsByRegion).reduce((sum, n) => sum + n, 0) : null;
   const { data: latestReviews } = await supabase
     .from('reviews')
     .select('id, display_name, rating, comment, hidden, created_at, vendors(business_name)')
@@ -110,12 +111,16 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
           </Link>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
           <Stat label="Waiting for approval" value={counts.pending} />
           <Stat label="On the map" value={counts.approved} />
           <Stat label="Trading right now" value={liveNow} />
           <Stat label="Founding spots left" value={spots ?? FOUNDING.spots} suffix={spots === null ? ' (Stripe not connected)' : ` of ${FOUNDING.spots}`} />
         </div>
+        <p className="text-[14px] mb-8" style={{ color: 'var(--muted)' }}>
+          Founding spots left by region:{' '}
+          {FOUNDING_REGIONS.map((r) => `${r.name} ${spotsByRegion ? spotsByRegion[r.id] : r.spots} of ${r.spots}`).join(' · ')}
+        </p>
 
         <AddVendorForm />
 
