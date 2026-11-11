@@ -150,4 +150,47 @@ export const SEED_MARKETS: Market[] = [
     day_of_week: 'One Friday a month, 4pm - 8pm',
     website_url: 'https://www.facebook.com/devonporttwilightmarket',
   },
+  // m10 - m12 added 11 Nov 2026 from the markets' Facebook event listings.
+  {
+    id: 'm10',
+    name: 'Penguin Twilight Market',
+    slug: 'penguin-twilight-market',
+    description:
+      'A Saturday evening market at the Penguin Football Club, run by Tassie Market Trail, with local makers and food. Held on selected dates - check Tassie Market Trail on Facebook for the next one.',
+    location_name: 'Penguin Football Club, 1 Dial Park Drive',
+    suburb: 'Penguin',
+    state: 'TAS',
+    lat: -41.127,
+    lng: 146.0716,
+    frequency: 'Selected Saturdays',
+    day_of_week: 'Selected Saturdays, 4pm - 8pm',
+  },
+  {
+    id: 'm11',
+    name: 'Banksia Makers Market',
+    slug: 'banksia-makers-market',
+    description:
+      'A monthly makers market at Camp Banksia in Port Sorell, with stalls of handcrafted goods from local makers.',
+    location_name: 'Camp Banksia, 1 Anderson Street',
+    suburb: 'Port Sorell',
+    state: 'TAS',
+    lat: -41.1619,
+    lng: 146.5488,
+    frequency: 'Monthly',
+    day_of_week: 'Second Saturday of the month, 9.30am - 1.30pm',
+  },
+  {
+    id: 'm12',
+    name: 'Ulverstone Market',
+    slug: 'ulverstone-market',
+    description:
+      'A Saturday market at the Ulverstone Rowing Club on Kings Parade, with food stalls and local makers. Check Ulverstone Market on Facebook for dates.',
+    location_name: 'Ulverstone Rowing Club, Kings Parade',
+    suburb: 'Ulverstone',
+    state: 'TAS',
+    lat: -41.1583,
+    lng: 146.1637,
+    frequency: 'Selected Saturdays',
+    day_of_week: 'Selected Saturdays, 10am - 2pm',
+  },
 ];
