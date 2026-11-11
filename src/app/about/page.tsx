@@ -37,7 +37,7 @@ export default function AboutPage() {
 
       <h2>Starting in Tasmania</h2>
       <p>
-        We&apos;re starting in Hobart and the rest of Tasmania, and we&apos;ll bring the map to the rest of
+        We&apos;re starting right across Tasmania, and we&apos;ll bring the map to the rest of
         Australia once it&apos;s working well here.
       </p>
 

@@ -249,7 +249,7 @@ export default function HomeClient({ vendors, vendorOfWeekId }: { vendors: Vendo
             </h2>
             <p className="text-[16px] leading-relaxed mb-6" style={{ color: 'var(--muted)' }}>
               We&apos;re signing up our first food vans, coffee carts and mobile food businesses
-              now, starting in Hobart. In the meantime, the markets on the map are a great place
+              now, right across Tasmania. In the meantime, the markets on the map are a great place
               to find them.
             </p>
             <Link

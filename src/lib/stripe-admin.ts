@@ -1,11 +1,12 @@
 import 'server-only';
 import { getStripe } from '@/lib/stripe';
-import { isPlanId, type PlanId } from '@/lib/plans';
+import { FOUNDING_REGIONS, isPlanId, type PlanId } from '@/lib/plans';
 
 export interface StripeInfo {
   plan: PlanId | null;
   status: string;
   founding: boolean;
+  region: string | null;
   freeUntil: string | null;
   customerUrl: string | null;
 }
@@ -25,6 +26,7 @@ export async function stripeInfoFor(email: string | null): Promise<StripeInfo | 
       plan: sub && isPlanId(sub.metadata?.plan) ? (sub.metadata.plan as PlanId) : null,
       status: sub?.status ?? 'no subscription',
       founding: sub?.metadata?.founding === 'true',
+      region: FOUNDING_REGIONS.find((r) => r.id === sub?.metadata?.region)?.name ?? null,
       freeUntil: sub?.trial_end ? new Date(sub.trial_end * 1000).toISOString() : null,
       customerUrl: `https://dashboard.stripe.com/${testPath}customers/${customer.id}`,
     };

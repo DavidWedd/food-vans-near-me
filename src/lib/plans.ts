@@ -19,9 +19,23 @@ export const PLANS: Record<PlanId, Plan> = {
   premium: { id: 'premium', name: 'Premium', priceCents: 6900, lookupKey: 'fvnm_premium_monthly', trialDays: 0 },
 };
 
+/** Founding spots are shared out by region so the whole state is covered. Change the numbers here only. */
+export const FOUNDING_REGIONS = [
+  { id: 'south', name: 'South', hint: 'Hobart, Huon, Derwent Valley', spots: 6 },
+  { id: 'north', name: 'North', hint: 'Launceston, Tamar, Midlands', spots: 4 },
+  { id: 'north-west', name: 'North West', hint: 'Devonport, Burnie, West Coast', spots: 3 },
+  { id: 'east-coast', name: 'East Coast', hint: 'St Helens, Bicheno, Swansea', spots: 2 },
+] as const;
+
+export type RegionId = (typeof FOUNDING_REGIONS)[number]['id'];
+
+export function isRegionId(value: unknown): value is RegionId {
+  return FOUNDING_REGIONS.some((r) => r.id === value);
+}
+
 export const FOUNDING = {
-  /** How many founding spots there are. */
-  spots: 15,
+  /** How many founding spots there are in total (the regions added together). */
+  spots: FOUNDING_REGIONS.reduce((sum, r) => sum + r.spots, 0),
   /** Founding vendors get any plan free for this many days. */
   freeDays: 365,
 } as const;

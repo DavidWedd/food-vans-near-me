@@ -1,6 +1,6 @@
 import 'server-only';
 import Stripe from 'stripe';
-import { FOUNDING, type Plan } from './plans';
+import { FOUNDING_REGIONS, isRegionId, type Plan, type RegionId } from './plans';
 
 let client: Stripe | null = null;
 
@@ -16,15 +16,16 @@ export function getStripe(): Stripe | null {
 export const FOUNDING_METADATA = { founding: 'true' } as const;
 
 /**
- * How many founding spots are left. Counts every subscription ever tagged as founding,
- * including cancelled ones, so a spot isn't freed up by someone cancelling.
+ * How many founding spots are left in each region. Counts every subscription ever tagged as
+ * founding, including cancelled ones, so a spot isn't freed up by someone cancelling.
+ * A founding subscription with no region on it is counted against the South.
  * Returns null if Stripe isn't configured or can't be reached.
  */
-export async function foundingSpotsLeft(): Promise<number | null> {
+export async function foundingSpotsByRegion(): Promise<Record<RegionId, number> | null> {
   const stripe = getStripe();
   if (!stripe) return null;
   try {
-    let used = 0;
+    const used = Object.fromEntries(FOUNDING_REGIONS.map((r) => [r.id, 0])) as Record<RegionId, number>;
     let page: string | undefined;
     do {
       const result = await stripe.subscriptions.search({
@@ -32,10 +33,15 @@ export async function foundingSpotsLeft(): Promise<number | null> {
         limit: 100,
         page,
       });
-      used += result.data.length;
+      for (const sub of result.data) {
+        const region = sub.metadata?.region;
+        used[isRegionId(region) ? region : 'south'] += 1;
+      }
       page = result.has_more ? (result.next_page ?? undefined) : undefined;
     } while (page);
-    return Math.max(0, FOUNDING.spots - used);
+    return Object.fromEntries(
+      FOUNDING_REGIONS.map((r) => [r.id, Math.max(0, r.spots - used[r.id])])
+    ) as Record<RegionId, number>;
   } catch (err) {
     console.error('Could not count founding spots', err);
     return null;

@@ -1,13 +1,14 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import type Stripe from 'stripe';
-import { FOUNDING, PLANS, isPlanId } from '@/lib/plans';
-import { FOUNDING_METADATA, foundingSpotsLeft, getOrCreatePrice, getStripe } from '@/lib/stripe';
+import { FOUNDING, FOUNDING_REGIONS, PLANS, isPlanId, isRegionId } from '@/lib/plans';
+import { FOUNDING_METADATA, foundingSpotsByRegion, getOrCreatePrice, getStripe } from '@/lib/stripe';
 
 export const dynamic = 'force-dynamic';
 
 /**
  * The Join page posts a plan here. We create a Stripe Checkout session and send the
- * vendor straight to it. While founding spots remain, any plan is free for 12 months.
+ * vendor straight to it. While founding spots remain in their region, any plan is free for
+ * 12 months.
  * No card is asked for unless something is due today.
  */
 export async function POST(request: NextRequest) {
@@ -18,6 +19,8 @@ export async function POST(request: NextRequest) {
   const planId = form?.get('plan');
   if (!isPlanId(planId)) return back('invalid-plan');
   const plan = PLANS[planId];
+
+  const regionId = form?.get('region');
 
   const stripe = getStripe();
   if (!stripe) return back('unavailable');
@@ -30,16 +33,20 @@ export async function POST(request: NextRequest) {
       (r) => r.display_name === 'GST' && r.percentage === 10
     );
 
-    const spotsLeft = await foundingSpotsLeft();
-    const founding = spotsLeft !== null && spotsLeft > 0;
+    const spots = await foundingSpotsByRegion();
+    const anyLeft = spots !== null && Object.values(spots).some((n) => n > 0);
+    // Founding spots are per region, so we need to know where they trade before going on.
+    if (anyLeft && !isRegionId(regionId)) return back('pick-region');
+    const region = isRegionId(regionId) ? FOUNDING_REGIONS.find((r) => r.id === regionId) : undefined;
+    const founding = Boolean(spots && region && spots[region.id] > 0);
     const trialDays = founding ? FOUNDING.freeDays : plan.trialDays;
 
     const subscription_data: Stripe.Checkout.SessionCreateParams.SubscriptionData = {
       billing_mode: { type: 'flexible' },
       description: founding
-        ? `Founding vendor - ${plan.name} free for 12 months`
+        ? `Founding vendor (${region?.name}) - ${plan.name} free for 12 months`
         : `${plan.name} plan`,
-      metadata: { plan: plan.id, ...(founding ? FOUNDING_METADATA : {}) },
+      metadata: { plan: plan.id, ...(region ? { region: region.id } : {}), ...(founding ? FOUNDING_METADATA : {}) },
     };
     if (trialDays > 0) {
       subscription_data.trial_period_days = trialDays;
